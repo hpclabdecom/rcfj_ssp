@@ -1,0 +1,1433 @@
+                                       City Research Online
+                                   City St George’s, University of London
+
+
+
+ Citation: Kasapidis, G., Paraskevopoulos, D., Mourtos, I. & Repoussis, P. (2025).
+ A Unified Solution Framework for Flexible Job Shop Scheduling Problems with
+ Multiple Resource Constraints. European Journal of Operational Research,
+ 320(3), pp. 479-495. doi: 10.1016/j.ejor.2024.08.010
+
+ This is the published version of the paper.
+
+ This version of the publication may differ from the final published version. To cite
+ this item please consult the publisher's version.
+
+
+
+
+ Permanent repository link: https://openaccess.city.ac.uk/id/eprint/33482/
+
+ Link to published version: https://doi.org/10.1016/j.ejor.2024.08.010
+
+
+
+
+Copyright and Reuse: Copyright and Moral Rights remain with the author(s) and/or
+copyright holders. Copies of full items can be used for personal research or study,
+educational, or not-for-profit purposes without prior permission or charge, unless otherwise
+indicated, provided that the authors, title and full bibliographic details are credited, a
+hyperlink and/or URL is given for the original metadata page and the content is not changed
+in any way. For full details of reuse please refer to City Research Online policy.
+
+ City Research Online:     http://openaccess.city.ac.uk/   publications@citystgeorges.ac.uk
+                                                              European Journal of Operational Research xxx (xxxx) xxx
+
+
+                                                                      Contents lists available at ScienceDirect
+
+
+                                                 European Journal of Operational Research
+                                                              journal homepage: www.elsevier.com/locate/eor
+
+
+Discrete optimization
+
+A unified solution framework for flexible job shop scheduling problems with
+multiple resource constraints
+Gregory A. Kasapidis a ,∗, Dimitris C. Paraskevopoulos b , Ioannis Mourtos c ,
+Panagiotis P. Repoussis d
+a
+    University of Liverpool Management School, University of Liverpool, Liverpool, UK
+b Bayes Business School (formerly Cass), City St George’s, University of London, London, UK
+c Department of Management Science and Technology, School of Business Athens University of Economics and Business, Athens, Greece
+d Department of Marketing and Communication, School of Business Athens University of Economics and Business, Athens, Greece
+
+
+
+
+ARTICLE                  INFO                                ABSTRACT
+
+Keywords:                                                    This paper examines flexible job shop scheduling problems with multiple resource constraints. A unified
+Scheduling                                                   solution framework is presented for modelling various types of non-renewable, renewable and cumulative
+Flexible Job Shop Scheduling                                 resources, such as limited capacity machine buffers, tools, utilities and work in progress buffers. We propose
+Constraint Programming
+                                                             a Constraint Programming (CP) model and a CP-based Adaptive Large Neighbourhood Search (ALNS-CP)
+Adaptive Large Neighbourhood Search
+                                                             algorithm. The ALNS-CP uses long-term memory structures to store information about the assignment to
+Resource constraints
+                                                             machines of both individual operations and pairs of operations, as encountered in high-quality and diverse
+                                                             solutions during the search process. This information is used to create additional constraints for the CP solver,
+                                                             which guide the search towards promising regions of the solution space. Numerous experiments are conducted
+                                                             on well-known benchmark sets to assess the performance of ALNS-CP against the current state-of-the-art.
+                                                             Additional experiments are conducted on new instances of various sizes to study the impact of different
+                                                             resource types on the makespan. The computational results show that the proposed solution framework is
+                                                             highly competitive, while it was able to produce 39 new best solutions on well-known problem instances of
+                                                             the literature.
+
+
+
+1. Introduction                                                                               units. On the other hand, non-renewable resources are permanently
+                                                                                              consumed, and they are replenished only at specific times following
+     The flexible job shop scheduling problem (FJSSP) has attracted                           a given policy. Lastly, cumulative resources, such as inventory buffers,
+significant attention in the literature (Brucker & Schlie, 1990) due to                       have a fixed capacity that is consumed when finished or semi-finished
+its importance and wide applicability. The FJSSP provides a flexible                          items are added to the storage space and replenished when items are
+base model that can be used to model industry driven (Li et al., 2020)                        removed.
+and rich (Mokhtari & Dadgar, 2015) production scheduling problems.                               Researchers have been studying the effect of resource constraints on
+Nevertheless, resource constraints are missing from the archetypal                            scheduling problems for a long time (Błażewicz et al., 1986; Słowiński,
+FJSSP, although such constraints play a critical role when modelling                          1980, 1981; Węglarz, 1981). One of the most prevalent problems of
+real life scheduling problems. Li and Gao (2020) mention that the shop                        the literature is the resource-constrained project scheduling problem
+scheduling literature with resource and buffer constraints is scarce, and                     (RCPSP) that examines the consumption of several renewable resources
+it is thus a promising research area.                                                         required for processing a set of activities (Brucker et al., 1999; Debels
+     Resources can be classified as renewable, non-renewable and cumu-                        & Vanhoucke, 2007; Patterson et al., 1990). The combination of renew-
+lative. The resources that are not permanently consumed are referred                          able and non-renewable resources is prevalent in papers that examine
+                                                                                              the multi-mode RCPSP (Chakrabortty et al., 2020; Coelho & Van-
+to as renewable. For example, utility resources, like electricity, are
+                                                                                              houcke, 2011; Elloumi et al., 2017; Muritiba et al., 2018; Van Peteghem
+consumed and renewed at any time, while a maximum consumption
+                                                                                              & Vanhoucke, 2014). On the other hand, the parallel production or con-
+limit is imposed. Also, tools and special equipment can be considered as
+                                                                                              sumption of non-renewable resources has attracted less attention in the
+renewable resources; however, they can only be consumed as discrete
+
+
+     ∗ Corresponding author.
+     E-mail addresses: gkasapid@liverpool.ac.uk (G.A. Kasapidis), dimi@city.ac.uk (D.C. Paraskevopoulos), mourtos@aueb.gr (I. Mourtos), prepousi@aueb.gr
+(P.P. Repoussis).
+
+https://doi.org/10.1016/j.ejor.2024.08.010
+Received 7 November 2022; Accepted 11 August 2024
+Available online 12 August 2024
+0377-2217/© 2024 The Authors. Published by Elsevier B.V. This is an open access article under the CC BY license (http://creativecommons.org/licenses/by/4.0/).
+
+
+
+    Please cite this article as: Gregory A. Kasapidis et al., European Journal of Operational Research, https://doi.org/10.1016/j.ejor.2024.08.010
+G.A. Kasapidis et al.                                                                                        European Journal of Operational Research xxx (xxxx) xxx
+
+
+RCPSP literature (van der Beek et al., 2024; Hanzálek & Šůcha, 2017),            et al., 2006; Fan et al., 2022; Figielska, 2014; Latorre-Núñez et al.,
+while cumulative or storage resources have also been studied (Gehring            2016; Novas & Henning, 2014; Soares & Carvalho, 2020; Wong et al.,
+et al., 2022; Hanzálek & Šůcha, 2017). A comprehensive survey on                 2009; Zeballos et al., 2010), while eight consider utility renewable
+RCPSP variants is given by Hartmann and Briskorn (2022).                         resources (e.g., electricity) and other generic resources (Fanjul-Peyro
+    The RCPSP can be considered as a generalization of various shop              et al., 2017; Figielska, 2018; Fleszar & Hindi, 2018; Li et al., 2019; Liu
+scheduling problems, including the FJSSP. Regarding shop scheduling              et al., 2017; Nguyen et al., 2019; Sha et al., 2021; Waldherr & Knust,
+problems with resource constraints, the existing body of literature is           2017). Cumulative resources are mostly encountered in the form of LCB
+not sufficiently organized. Indicatively, one can find different names           buffers (Brucker et al., 2006; Liu et al., 2018; Trabelsi et al., 2012; Yau-
+and terminologies in different papers for describing the same type of            rima et al., 2009). In this category, we also include papers that address
+resources. The vast majority of papers consider only one specific type           the so-called Blocking Job Shop Scheduling Problem (BJSSP) (Dabah
+of resource, while (to our knowledge) there is no model or method that           et al., 2019; Mascis & Pacciarelli, 2002; Meloni et al., 2022; Mogali,
+can take into account different types of resources. In this paper, we or-        Barbulescu, & Smith, 2021; Mogali, Smith, & Rubinstein, 2021) as a
+ganize the literature of shop scheduling with various types of resource          special case of LCB resources with zero capacity. Papers that consider
+constraints and present a unified solution framework for solving the             non-renewable resources, mostly include contributions that focus on
+FJSSP with resource constraints.                                                 the single machine scheduling problem (Grigoriev et al., 2005; Györgyi
+    This paper contributes to the existing body of literature in numerous        & Kis, 2017). In most cases, non-renewable resources refer to specific
+ways. First, a detailed literature review is performed, the different            supply and consumption rates (Györgyi & Kis, 2019; Hashimoto &
+types of resources are identified and clarified and the literature of shop       Mizuno, 2021).
+scheduling problems with resource constraints is classified with respect             Fig. 1(a) provides an overview of the literature regarding the most
+to the resource types. Second, a Constraint Programming (CP) formu-              prevalent solution methodologies. Specifically, 26 out of 47 papers
+lation is proposed for modelling the problem with all known types of             present exact solution approaches. The majority of these papers are
+resources; this CP model is used to derive optimal solutions and lower           MIP-based models, while very few present CP-based algorithms (No-
+bounds. Third, a novel CP-based adaptive large neighbourhood search              vas, 2019; Novas & Henning, 2014; Zeballos et al., 2010). There
+(ALNS-CP) is presented, which imposes additional constraints based               exist some approximation algorithms (Györgyi & Kis, 2017, 2018;
+on operation-to-machine and operation-pair-to-machine assignments.               Hashimoto & Mizuno, 2021) and Column Generation solution meth-
+Fourth, a thorough experimentation on well-known benchmark data                  ods (Figielska, 2018). Regarding heuristic methodologies, 11 papers
+sets of the literature showed that the ALNS-CP is highly competitive             present heuristic solution frameworks that consider problem-specific
+compared to the current state-of-the-art, while it outperforms the off-          information (Andrade-Pineda et al., 2020; Azzi et al., 2012; Herr &
+the-shelf CP solver. Lastly, various computational experiments have              Goel, 2016; Mascis & Pacciarelli, 2002; Trabelsi et al., 2012; Wald-
+been conducted on new problem instances with resource constraints                herr & Knust, 2017) as well as dispatching rules (Elmaraghy et al.,
+in order to study the effect of various resource types on the makespan.          2000). Regarding meta-heuristic algorithms, the majority of papers
+    The remainder of the paper is organized as follows: Section 2                present genetic algorithms (GA) (Chan et al., 2006; Elmaraghy et al.,
+reviews the recent literature on shop scheduling problems. Next, Sec-            2000; Latorre-Núñez et al., 2016; Wong et al., 2009) and other GA-
+tion 3 presents a CP formulation of the FJSSP with resource con-                 based solution frameworks (Fan et al., 2022; Li et al., 2016; Soares &
+straints. The proposed solution framework and all the key algorithmic            Carvalho, 2020; Zhang et al., 2021). Tabu search is another popular
+components are presented in Section 4. Computational results from                solution method that can be found in Gröflin et al. (2011), Aschauer
+experiments on various benchmark data sets are presented in Section 5.           et al. (2017, 2018) and Dabah et al. (2019). Lastly, there is a small
+We conclude in Section 6, where pointers for future research are also            amount of papers that present other types of meta-heuristics, such
+provided.                                                                        as particle swarm optimization (Wong et al., 2009), ant colony opti-
+                                                                                 mization (Belaid et al., 2012; Campos Ciro et al., 2016), local search
+2. Literature review                                                             algorithms (Bitar et al., 2016; Boufellouh & Belkaid, 2020; Mogali,
+                                                                                 Barbulescu, & Smith, 2021; Pranzo & Pacciarelli, 2016) as well as large
+    Table 1 provides a summary of the papers from the shop scheduling            neighbourhood search (Beezão et al., 2017).
+literature, that consider cumulative, renewable and non-renewable re-                Fig. 1(b) provides an overview of the popular problem variants.
+sources. Regarding cumulative resources, the most prominent types are            The Job Shop Scheduling Problem (JSSP), the Flow Shop Scheduling
+the Work-in-Progress (WIP) inventories and Limited Capacity Buffers              Problem (FSSP) as well as the FJSSP, are the most popular problem
+(LCB). Both of them refer to storage capacity restrictions on the pro-           variants. There exists only a handful of papers that study the original
+duction floor. In the case of renewable resources, we consider human,            JSSP (Agnetis et al., 2014; Brucker et al., 2006). On the other hand, the
+equipment, tools and other resource types. The latter includes re-               Dual-Resource Constrained Job Shop Scheduling Problem (DRCJSSP)
+sources, such as utilities, that cannot be classified either as human,           and the Blocking Job Shop Scheduling Problem (BJSSP) are the most
+equipment or tool resources. The last column represents non-renewable            widely used variants. More specifically, the BJSSP is mostly used to
+resources, such as supplies and raw materials.                                   study cumulative LCB resources with zero capacity (Dabah et al., 2016,
+    We have reviewed 47 papers published from 2000 to 2022. One                  2019; Mogali, Barbulescu, & Smith, 2021; Oddi et al., 2012), while the
+may observe that the vast majority of papers focuses on a specific               DRCJSSP considers only human resources (Elmaraghy et al., 2000; Lei
+resource type, while only a handful of papers address more than one              & Guo, 2014; Li et al., 2016). The FSSP (Belaid et al., 2012; Figielska,
+resource type. In particular, Liu et al. (2017) and Sha et al. (2021)            2014, 2018; Trabelsi et al., 2012; Waldherr & Knust, 2017) is also
+examine both renewable and non-renewable resources, while Wong                   popular, since it can be used to model assembly line environments
+et al. (2009) and Novas and Henning (2014) study both cumulative                 with resource constraints. Furthermore, other FSSP variants like the
+and renewable resources. There exist no papers that consider simultane-          Hybrid Flow Shop Scheduling Problem (Azzi et al., 2012; Latorre-
+ously LCB resources with other types of resources, and the combination           Núñez et al., 2016; Yaurima et al., 2009) and the Permutation Flow
+of non-renewable and cumulative resources.                                       Shop Scheduling Problem (Boufellouh & Belkaid, 2020) have attracted
+    Out of the 47 reviewed papers, 17 consider renewable resources in            significant research interest. The generalized FJSSP (Brucker & Schlie,
+the form of personnel (Agnetis et al., 2014; Campos Ciro et al., 2016;           1990) comes third (Aschauer et al., 2017, 2018; Chan et al., 2006;
+Elmaraghy et al., 2000; Latorre-Núñez et al., 2016; Lei & Guo, 2014; Li          Liu et al., 2017; Novas, 2019). Next, the so-called Flexible Manu-
+et al., 2016; Zhang et al., 2021) and manufacturing equipment, such as           facturing System (FMS) problem is often used to study renewable
+tools, masks or fixtures (Beezão et al., 2017; Bitar et al., 2016; Chan          resources (Soares & Carvalho, 2020; Zeballos et al., 2010), while the
+
+                                                                             2
+G.A. Kasapidis et al.                                                                                        European Journal of Operational Research xxx (xxxx) xxx
+
+                        Table 1
+                        Literature overview.
+                                                                Cumulative          Renewable                           Non-renewable
+                                                                WIP     LCB         Human       Equipment   Other
+                         Elmaraghy et al. (2000)                –       –           ✓           –           –           –
+                         Mascis and Pacciarelli (2002)          –       ✓           –           –           –           –
+                         Grigoriev et al. (2005)                –       –           –           –           –           ✓
+                         Brucker et al. (2006)                  –       ✓           –           –           –           –
+                         Chan et al. (2006)                     –       –           –           ✓           –           –
+                         Wong et al. (2009)                     ✓       –           –           ✓           –           –
+                         Yaurima et al. (2009)                  –       ✓           –           –           –           –
+                         Zeballos et al. (2010)                 –       –           –           ✓           –           –
+                         Gröflin et al. (2011)                  –       ✓           –           –           –           –
+                         Azzi et al. (2012)                     ✓       –           –           –           –           –
+                         Trabelsi et al. (2012)                 –       ✓           –           –           –           –
+                         Belaid et al. (2012)                   ✓       –           –           –           –           –
+                         Novas and Henning (2014)               ✓       –           –           ✓           –           –
+                         Lei and Guo (2014)                     –       –           ✓           –           –           –
+                         Agnetis et al. (2014)                  –       –           ✓           –           –           –
+                         Figielska (2014)                       –       –           –           ✓           –           –
+                         Bitar et al. (2016)                    –       –           –           ✓           –           –
+                         Latorre-Núñez et al. (2016)            –       –           ✓           ✓           –           –
+                         Li et al. (2016)                       –       –           ✓           –           –           –
+                         Campos Ciro et al. (2016)              –       –           ✓           –           –           –
+                         Herr and Goel (2016)                   –       –           –           –           –           ✓
+                         Aschauer et al. (2017)                 –       ✓           –           –           –           –
+                         Beezão et al. (2017)                   –       –           –           ✓           –           –
+                         Waldherr and Knust (2017)              –       –           –           –           ✓           –
+                         Fanjul-Peyro et al. (2017)             –       –           –           –           ✓           –
+                         Liu et al. (2017)                      –       –           –           –           ✓           ✓
+                         Györgyi and Kis (2017)                 –       –           –           –           –           ✓
+                         Liu et al. (2018)                      –       ✓           –           –           –           –
+                         Aschauer et al. (2018)                 –       ✓           –           –           –           –
+                         Fleszar and Hindi (2018)               –       –           –           –           ✓           –
+                         Figielska (2018)                       –       –           –           –           ✓           –
+                         Györgyi and Kis (2018)                 –       –           –           –           –           ✓
+                         Novas (2019)                           ✓       –           –           –           –           –
+                         Dabah et al. (2019)                    –       ✓           –           –           –           –
+                         Li et al. (2019)                       –       –           –           –           ✓           –
+                         Nguyen et al. (2019)                   –       –           –           –           ✓           –
+                         Györgyi and Kis (2019)                 –       –           –           –           –           ✓
+                         Soares and Carvalho (2020)             –       –           –           ✓           –           –
+                         Boufellouh and Belkaid (2020)          –       –           –           –           –           ✓
+                         Andrade-Pineda et al. (2020)           –       –           –           –           –           ✓
+                         Mogali, Barbulescu, and Smith (2021)   –       ✓           –           –           –           –
+                         Mogali, Smith, and Rubinstein (2021)   –       ✓           –           –           –           –
+                         Zhang et al. (2021)                    –       –           ✓           –           –           –
+                         Hashimoto and Mizuno (2021)            –       –           –           –           –           ✓
+                         Sha et al. (2021)                      –       –           –           –           ✓           ✓
+                         Fan et al. (2022)                      –       –           –           ✓           –           –
+                         Meloni et al. (2022)                   –       ✓           –           –           –           –
+
+
+
+Unrelated Parallel Machine Scheduling (UPM) problem serves as a base              3. Modelling framework
+model to study renewable resources where operations have different
+resource requirements depending on the machine that they are assigned             3.1. Notation
+to Fanjul-Peyro et al. (2017), Fleszar and Hindi (2018), Li et al. (2019).
+Lastly, the Single-machine Scheduling (SSP) problem has also received                 This section presents the CP model of the FJSSP with multiple types
+some attention (Györgyi & Kis, 2017, 2018; Hashimoto & Mizuno,                    of resource constraints. For consistency, we adopt the notation used
+2021; Herr & Goel, 2016) and has been used as the test bed to examine             by Kasapidis et al. (2021) for the FJSSP with arbitrary precedence
+the properties of non-renewable resources.                                        graphs. Let 𝐽 = {1, … , 𝑙} denote the set of jobs, 𝑀 = {1, … , 𝑚}
+                                                                                  denote the set of machines, and 𝛺 = {1, … , 𝑛} denote the set of all the
+    In terms of objective functions, 34 out of 47 papers consider the
+                                                                                  operations. The set 𝑀𝑖 denotes the set of available machines, where an
+makespan as the primary objective. Despite the addition of resource                                                                          +
+                                                                                  operation 𝑖 can be processed. Additionally, let 𝜔− 𝑖 and 𝜔𝑖 denote the
+constraints, the main concern remains to minimize the completion
+                                                                                  single job predecessor and successor operations of an operation 𝑖 (if
+time of the production schedule. Some papers consider the maximum                                                                +     +
+                                                                                  any). For completeness, let 𝛺𝑖− = {𝜔− 𝑖 } and 𝛺𝑖 = {𝜔𝑖 } denote two sets
+lateness and tardiness and these objectives are encountered when due              that include the predecessor and successor operation of an operation 𝑖,
+and release dates of jobs are present (Grigoriev et al., 2005; Györgyi &          respectively. If an operation 𝑖 has no job predecessor and/or successor
+Kis, 2017; Herr & Goel, 2016; Nguyen et al., 2019). Alternative objec-            operations, then 𝛺𝑖− = ∅ and/or 𝛺𝑖+ = ∅, respectively. The flexibility
+tives include the carbon footprint minimization (Liu et al., 2017), the           𝑓 of the problem describes the average number of machines available
+                                                                                                                                                ∑
+machine idle cost (Chan et al., 2006), the maintenance cost (Boufellouh           per operation of the problem and can be calculated as: 𝑓 = 1𝑛 𝑛𝑖=1 |𝑀𝑖 |.
+& Belkaid, 2020) and also the minimization of the amount of tools                                    ◦       ∗
+                                                                                  Lastly, symbols 𝑖𝑗 and 𝑖𝑗 are used to denote the first and the last
+used (Zeballos et al., 2010). Lastly, we also notice that 36 out of 47            operations of a job 𝑗 ∈ 𝐽 , respectively.
+papers consider only a single objective, while only 11 papers consider                The above notation is extended by introducing new nomenclature
+multiple objectives.                                                              for modelling renewable, non-renewable and cumulative resources. Let
+
+                                                                              3
+G.A. Kasapidis et al.                                                                                                European Journal of Operational Research xxx (xxxx) xxx
+
+
+
+
+                                            Fig. 1. Overview of the shop scheduling literature with resource constraints.
+
+
+𝑅 = {1, … , 𝐿𝑅 } denote a set of arbitrary non-renewable resources, with              every operation can be assigned to exactly one machine, and |𝑇𝑖 | = 1,
+zero initial inventory, and let 𝑇 = {1, … , 𝐿𝑇 } be a set of renewable tool           ∀𝑖 ∈ 𝛺, which means that every operation requires a single tool. The
+resources that may be required during the processing of an operation.                 information of the problem is presented in Table 2. We also assume that
+The number of available instances of a tool 𝑟 ∈ 𝑇 is denoted by 𝑇̄𝑟 . This            the limited capacity buffer of every machine 𝑘 ∈ 𝑀 has zero capacity,
+means that no more than 𝑇̄𝑟 instances of 𝑟 can be used simultaneously                 i.e. 𝑦𝑘 = 0, and that the available instances for the tool resources are
+for the entire duration of the schedule. Let 𝑇𝑖 ⊆ 𝑇 denote the set of                 𝑇̄1 = 3 and 𝑇̄2 = 1.
+required tools for an operation 𝑖. Also, let 𝑈 = {1, … , 𝐿𝑈 } be a set                     Fig. 2(a) presents the Gantt chart of an optimal schedule and the
+of renewable utility resources. This type of resource is consumed by                  consumption of 𝑈1 when no resource constraints are imposed. The
+a machine 𝑘 ∈ 𝑀 for processing an operation 𝑖 (e.g., consumption                      value of the objective 𝐶𝑚𝑎𝑥 is 15, while the maximum consumption
+of a utility). Similarly, each resource 𝑟 ∈ 𝑈 has a hard consumption                  of 𝑈1 is 6 units. If a tighter consumption limit is considered for 𝑈1 ,
+limit denoted by 𝑈̄ 𝑟 . The requirements of a resource 𝑟 ∈ 𝑈 for the                  i.e., 𝑈̄ 1 = 4, the operations 𝑂𝑃 (2) and 𝑂𝑃 (3) have to be executed
+processing of an operation 𝑖 ∈ 𝛺 on a machine 𝑘 ∈ 𝑀𝑖 , is denoted                     after operation 𝑂𝑃 (5), so that the resource consumption limit is re-
+by 𝑢𝑖,𝑘,𝑟 . Note that, 𝑢𝑖,𝑘,𝑟 ≥ 0 ∀𝑟 ∈ 𝑈 , ∀𝑖 ∈ 𝛺, ∀𝑘 ∈ 𝑀𝑖 . Given the fact           spected. This results in an increased value of the objective by 4 units,
+that the tool and utility resources are both renewable, tools could be                i.e. 𝐶𝑚𝑎𝑥 = 19 (see Fig. 2(b)). Furthermore, if limited capacity buffers of
+modelled using the formulation of utility resources with 𝑢𝑖,𝑘,𝑟 = 1, ∀𝑘 ∈             zero capacity are also considered, some operations are prevented from
+𝑀𝑖 . Nevertheless, for the sake of simplicity, we choose to keep their                starting right after their machine predecessors. As shown in Fig. 2(c),
+representation separate.                                                              𝑂𝑃 (4) is forced to start five time units later, increasing the makespan
+     Let 𝑊 = {1, … , 𝐿𝑊 } be a set of cumulative resources in the form                to 𝐶𝑚𝑎𝑥 = 20. Lastly, if tool resources are also present, the execution of
+of WIP buffers. The main motivation behind this resource type is that                 𝑂𝑃 (4) (and subsequently the makespan) is further shifted by 3 units,
+it can be used to represent work-in-progress buffers that store non-                  since operations 𝑂𝑃 (2) and 𝑂𝑃 (4) require the same tool available in
+renewable resources. In particular, for each non-renewable resource                   one instance only, as shown in Fig. 2(d). Evidently, even for very small
+𝑟 ∈ 𝑅, the associated cumulative resource is denoted by 𝑊𝑟 , while the                problems, resource constraints may cause a significant increase to the
+maximum capacity of a cumulative resource 𝑧 ∈ 𝑊 is denoted by 𝑊̄ 𝑧 .                  makespan, and the impact is even more significant when combinations
+Also, every machine is equipped with a limited capacity buffer. This                  of resource constraints are considered.
+is used to temporarily ‘‘hold’’ operations that have been processed on
+the corresponding machine, but cannot leave the machine, until the                    3.3. A constraint programming formulation
+processing of their job successor has started. In other words, the job
+operation currently completed at a given machine can proceed when                         The literature has shown that CP is particularly effective for solving
+the machine of their job successor becomes available, and this is the                 not only variants of the FJSSP (Kasapidis et al., 2021; Latorre-Núñez
+so-called blocking effect. The size of the limited capacity buffer of a               et al., 2016) but also variants of the RCPSP which can be considered as
+machine 𝑘 ∈ 𝑀 is denoted by 𝑦𝑘 .                                                      a generalization of the FJSSP (Gómez Sánchez et al., 2023). CP methods
+     Every job 𝑗 ∈ 𝐽 can be associated with two sets of resources                     use global constraints, which encapsulate sets of simpler constraints.
+       +
+𝑅−𝑗 , 𝑅𝑗 ⊆ 𝑅 that correspond to the resources required to initiate the                These constraints enable the design of simpler and more compact
+processing of a job, and produced once the job processing finishes. Note              formulations, while they are usually connected to efficient filtering
+that, there cannot exist a resource that is both required and produced                algorithms that can aid the domain filtering process and the constraint
+                         +
+by a job, i.e., 𝑅− 𝑗 ∩ 𝑅𝑗 = ∅, ∀𝑗 ∈ 𝐽 . Nevertheless, there can exist jobs            propagation. Specifically for scheduling problems with resource con-
+𝑗 ∈ 𝐽 that do not require or produce resources, i.e., 𝑅+             −
+                                                           𝑗 = ∅ ∧ 𝑅𝑗 = ∅.            straints, there exist the ‘cumulative’ (Aggoun & Beldiceanu, 1993) and
+                                      −      +
+The amount of a resource 𝑟 ∈ 𝑅𝑗 ∪ 𝑅𝑗 required or produced by a                        the ‘disjunctive’ (Carlier, 1982) global constraints. The common basis
+job 𝑗 is denoted by 𝑄𝑗,𝑟 . The required job resources are consumed                    between our CP-model and the majority of CP methodologies that have
+when the first operation of a job 𝑗, 𝑖◦𝑗 starts being processed, while the            been developed for FJSSP variants with resource constraints and the
+resources are produced when the last operation of the job 𝑖∗𝑗 finishes                RCPSP is the set of these global constraints.
+being processed. A Table with the symbols and their corresponding                         The effectiveness of the latest CP frameworks on production
+descriptions can be found on Appendix A of the online companion.                      scheduling applications is highlighted in the detailed literature review
+                                                                                      of Prata et al. (2024), who show that the majority of the publica-
+3.2. A motivating example                                                             tions study variants of shop-scheduling problems and more generic
+                                                                                      scheduling problems with resource constraints, like the RCPSP. In
+   To demonstrate the effect of the resource constraints on the                       particular, Novas (2019) developed a CP model to solve a complex
+makespan, we present a small example of an FJSSP problem with                         resource constrained FJSSP with lot/sub-lot streaming, no-wait con-
+resource constraints. Let us consider a problem with 𝑙 = 4, 𝑛 = 5,                    straints and a shared WIP buffer. The proposed methodology was
+𝑚 = 3, 𝐿𝑇 = 2 and 𝐿𝑈 = 1. Also, |𝑀𝑖 | = 1, ∀𝑖 ∈ 𝛺, which means that                   adopted and adapted by Zeballos et al. (2010) for solving a resource
+
+                                                                                  4
+G.A. Kasapidis et al.                                                                                                    European Journal of Operational Research xxx (xxxx) xxx
+
+                        Table 2
+                        Example instance of a FJSSP with resource constraints.
+                         Operation         Job         Predecessor         Machine         Processing time        Utility consumption         Tool
+                         1                 1           –                   1               5                      1                           1
+                         2                 1           1                   2               3                      3                           2
+                         3                 2           –                   2               6                      3                           1
+                         4                 3           –                   1               10                     1                           2
+                         5                 4           –                   3               10                     1                           1
+
+
+
+
+                                     Fig. 2. Gantt charts and resource consumption plots for different resource constraint combinations.
+
+
+constrained Flexible Manufacturing System problem that focuses on the                     large set of function expressions, constraint expressions and cumulative
+allocation of production jobs to machines and the allocation of tools                     function expressions that can be applied on interval variables. This rich
+to the available workstations. With regards to the RCPSP, researchers                     framework lends itself well to model complex scheduling problems with
+have been using these global constraints to develop models for more                       a wide variety of constraints. More specifically, function expressions
+generalized scheduling problems. More specifically, Trojet et al. (2011)                  can be used to access information regarding interval variables during
+propose a CP model based on the cumulative constraint to solve an                         the search, constraint expressions can be used to construct constraints
+RCPSP with additional energy consumption constraints. Kreter et al.                       that involve designated model variables by utilizing function expres-
+(2018, 2017) propose new CP models that incorporate novel constraint                      sions, while cumulative function expressions can be used to describe
+propagators for the RCPSP and the resource availability cost problem                      the contribution of interval variables to discrete linear functions over
+(RACP) with calendar constraints, respectively. The authors conducted                     time. We also refer the reader to Novas (2019) and Kasapidis et al.
+extensive computational experiments that showed how lazy clause
+                                                                                          (2021) for a more comprehensive description of interval and sequence
+generation combined with tailor-made constraint propagators can be
+                                                                                          interval variables of the CP Optimizer.
+used to significantly improve the performance of the CP, compared not
+                                                                                              During the search process, the CP optimizer progressively reduces
+only to other state-of-the-art CP solvers, but also to MILP formulations.
+                                                                                          the domains of all the variables of the problem. When the domain of
+    In this paper, we adopt the IBM CP Optimizer nomenclature. The
+                                                                                          an interval variable 𝑎 becomes a singleton set, i.e., |𝑑𝑜𝑚(𝑎)| = 1, the
+IBM CP Optimizer employs the so-called ‘‘interval’’ variables that can
+be used to represent a task or an activity. The interval variables are                    variable is labelled as ‘‘fixed’’ and is denoted by 𝑎. Subsequently, if the
+defined by three integer attributes, a starting time, an ending time and                  domain of all the decision interval variables is reduced to a singleton
+a duration of the interval. In the context of CP solvers, the interval                    set, a valid solution for the problem has been found. At this point, an
+variables may be defined as optional variables, i.e., they may or may                     interval variable 𝑎 ∶ ⊥ ∩ 𝑑𝑜𝑚(𝑎) = ∅, is also labelled as ‘‘present’’ in
+not be present in a feasible solution of a problem. According to Laborie                  the solution, while a variable 𝑎 ∶ 𝑑𝑜𝑚(𝑎) = {⊥} is labelled as ‘‘absent’’.
+et al. (2018), the domain of an interval variable 𝑎 is defined as:                        Absent variables are not considered by any constraint expression of the
+𝑑𝑜𝑚(𝑎) = {⊥} ∪ {[𝑠, 𝑒) ∶ 𝑠, 𝑒 ∈ Z, 𝑠 ≤ 𝑒}, where 𝑠, 𝑒 are the earliest start              problem as if they were never defined. On the other hand, when a fixed
+and latest completion times of 𝑎, respectively. The symbol ⊥, is used                     interval variable 𝑎 is present, several function expressions can be used
+to denote the truth value ‘‘False’’, i.e., ⊥ signifies a proposition that                 to calculate the attributes associated with the interval variable. The
+cannot be true under any circumstances. The CP Optimizer provides a                       function expressions that are used in this paper are presented below:
+
+                                                                                      5
+G.A. Kasapidis et al.                                                                                          European Journal of Operational Research xxx (xxxx) xxx
+
+
+     i. 𝑃 𝑟𝑒𝑠𝑒𝑛𝑐𝑒𝑂𝑓 (𝑎) defines a function expression that returns true             is also used to denote the domain set of variable 𝜏𝑖 . Lastly, a sequence
+        when the interval variable 𝑎 is present in the incumbent solution           interval decision variable 𝜎𝑘 is defined per machine 𝑘 for the set of
+        of the CP Optimizer, and false otherwise.                                   interval variables 𝜎𝑘 = {𝜙𝑖,𝑘 , ∀𝑖 ∈ 𝛺}. The cumulative function that
+    ii. 𝐸𝑛𝑑𝑂𝑓 (𝑎) defines a function expression that returns the comple-            accumulates the usage of the limited capacity buffer of a machine 𝑘 is
+        tion time of the interval variable 𝑎 in the incumbent solution of           denoted by 𝑌𝑘 . The CP formulation is given below:
+        the CP Optimizer if 𝑎 is present.
+                                                                                    minimize𝐶𝑚𝑎𝑥                                                                  (1)
+   iii. 𝑆𝑡𝑎𝑟𝑡𝑂𝑓 (𝑎) defines a function expression that returns the start
+        time of the interval variable 𝑎 in the incumbent solution of the            subject to the conditions given by Eqs. (2) to (14) in Box I.
+        CP Optimizer if 𝑎 is present.                                                   The objective (1) refers to the minimization of the makespan. Con-
+                                                                                    straints (2) are used to enforce a unique selection of the available modes
+     Moreover, the following constraint expressions are used to define              for the interval variable 𝜏𝑖 out of the set 𝜇𝑖 . Constraints (3) are used
+constraints that involve interval and/or sequence interval variables,               to cover the precedence relationships, i.e., each operation 𝑖 can start
+i.e., ordered lists of interval variables:                                          as soon as its single job predecessor 𝜔−          −
+                                                                                                                               𝑖 ∈ 𝛺𝑖 (if any) has finished.
+                                                                                    Constraints (4) ensure that the interval variables included in 𝜎𝑘 do not
+     i. 𝐸𝑛𝑑𝐵𝑒𝑓 𝑜𝑟𝑒𝑆𝑡𝑎𝑟𝑡(𝑎, 𝑏) denotes a constraint between two interval
+                                                                                    overlap, since a machine can execute only one operation at a time.
+        variables 𝑎, 𝑏 that ensures the start time of variable 𝑏 will be
+                                                                                    They also ensure that each operation starts after its machine predeces-
+        greater or equal to the end time of variable 𝑎.
+                                                                                    sor has finished. Constraints (5) and (6) are used to accumulate the
+    ii. 𝐴𝑙𝑡𝑒𝑟𝑛𝑎𝑡𝑖𝑣𝑒(𝑎, 𝐵) denotes a constraint that sets the domain of
+                                                                                    consumption of utility and tool resources, respectively. They also make
+        interval variable 𝑎 to the set 𝐵, i.e., if 𝑎 is present in the
+                                                                                    sure that the utility resource consumption limits as well as the available
+        incumbent solution, then exactly one of the interval variables
+                                                                                    tool instances are respected. Constraints (7)–(11) are used to describe
+        𝑏 ∈ 𝐵 is also present in the incumbent solution. Also, the
+                                                                                    the usage of limited capacity buffers. In more detail, Constraints (7)
+        attributes (start time, completion time and length) of 𝑎 and 𝑏
+                                                                                    impose a waiting time on a buffer that belongs to the machine where
+        will be identical.
+                                                                                    the operation was processed. Constraints (8) accumulate the usage
+   iii. 𝑁𝑜𝑂𝑣𝑒𝑟𝑙𝑎𝑝(𝜎) denotes a constraint on a set of variables 𝜎 that
+                                                                                    of the machine waiting buffers, while Constraints (9) make sure that
+        ensures there are no overlapping time windows between any
+                                                                                    processing on a machine can start only when the corresponding buffer
+        interval variables included in 𝜎.
+                                                                                    is not full. Constraints (10) and (11) define the duration of the waiting
+     Discrete linear functions in the IBM CP Optimizer are modelled                 of an activity to the machine buffer. More specifically, Constraints (10)
+using the notion of step-wise functions, which are special cases of                 ensure that waiting on the buffer starts immediately after processing on
+piece-wise linear functions. A piece-wise linear function is a function             the machine finishes, while Constraints (11) ensure that the activity is
+comprised of a number of segments, so that the function per segment                 removed from the buffer, when the job successor of an operation starts
+is linear (Leenaerts & Bokhoven, 1998). A step-wise function is a special           being processed. Constraints (12) are used to accumulate the produc-
+case of a piece-wise linear function, where the derivative of the function          tion and consumption of each generalized resource, while Constraints
+per segment is equal to zero, i.e., the function has a constant value               (13) accumulate the usage of resources on their corresponding work in
+per segment. Given that, the IBM CP Optimizer offers the so-called                  progress buffer. Lastly, Constraint (14) is responsible for the calculation
+cumulative function expressions that can be used to define step-wise                of the makespan.
+functions over the time-span of interval variables. Moreover, using
+constraint expressions, the values of these functions can be constrained            4. The adaptive large neighbourhood search-constraint program-
+as required. In this paper, we use the following expressions to model               ming method
+the consumption and production of resources:
+                                                                                        Large neighbourhood search (LNS) is a meta-heuristic algorithm
+     i. 𝑃 𝑢𝑙𝑠𝑒(𝑎, ℎ) defines a cumulative function whose value is equal             that was first introduced by Shaw (1998), which is similar to the ruin
+        to ℎ during the execution time window of an interval variable 𝑎             and re-create mechanism proposed by Schrimpf et al. (2000). More
+        and 0 otherwise, if 𝑎 is present in the solution.                           specifically, at each iteration, a part of the solution is destroyed and
+    ii. 𝑆𝑡𝑒𝑝𝐴𝑡𝑆𝑡𝑎𝑟𝑡(𝑎, ℎ) defines a cumulative function whose value is              then repaired using destruction and repair operators, respectively. The
+        equal to ℎ at the start of the interval variable 𝑎, if 𝑎 is present         adaptive LNS is an extension of LNS first introduced by Ropke and
+        in the solution.                                                            Pisinger (2006). ALNS uses multiple destruction and repair operators,
+   iii. 𝑆𝑡𝑒𝑝𝐴𝑡𝐸𝑛𝑑(𝑎, ℎ) defines a cumulative function whose value is                which are favoured based on their performance during the search. The
+        equal to ℎ after the end of the interval variable 𝑎, if 𝑎 is present        literature has shown that ALNS is effective in solving a wide variety
+        in the solution.                                                            of problems like vehicle routing (Hellsten et al., 2020; Kovacs et al.,
+   iv. 𝐴𝑙𝑤𝑎𝑦𝑠𝐼𝑛(𝐸, 𝑎, 𝑣𝑚𝑖𝑛 , 𝑣𝑚𝑎𝑥 ) denotes a constraint that limits the val-       2012) and shop scheduling (Rifai et al., 2016; Song et al., 2022). We
+        ues of the cumulative function expression 𝐸 within the domain               refer the reader to Pisinger and Ropke (2007) for a more comprehensive
+        [𝑣𝑚𝑖𝑛 , 𝑣𝑚𝑎𝑥 ] for the time interval defined by the interval variable       description of the ALNS.
+        𝑎, if 𝑎 is present in the solution.                                             There exists literature on solution methodologies that combine
+                                                                                    ALNS and CP frameworks. Palpant et al. (2004) developed an LNS-
+    Given the above, the examined problem can be modelled as follows.               CP algorithm for the Resource Constrained Project Scheduling Problem
+For every operation 𝑖 ∈ 𝛺, a decision interval variable 𝜏𝑖 is defined. In           (RCPSP), which decomposes the main problem into subproblems and
+addition, a decision interval variable 𝜙𝑖,𝑘 is defined for every machine            subsequently calls a CP solver to solve the sub-problems and com-
+𝑘 ∈ 𝑀𝑖 , with its length set to 𝜂𝑖,𝑘 , where 𝜂𝑖,𝑘 is used to denote the             pose a complete solution. Hojabri et al. (2018) developed a similar
+processing time of operation 𝑖 on the machine 𝑘. In order to calculate              scheme for the VRP with multiple synchronization constraints. Their
+the waiting times of operations in limited capacity buffers, for every              CP-based ALNS uses well-established destruction operators from the
+operation 𝑖 ∈ 𝛺 and a corresponding machine 𝑘 ∈ 𝑀𝑖 , we define the                  VRP literature, while a CP model is used to solve the main prob-
+decision variable 𝜙𝑏𝑖,𝑘 . The length of the decision interval variable 𝜙𝑏𝑖,𝑘        lem. Sacramento et al. (2020) propose a more generic math-heuristic
+is not fixed, since the waiting time of any operation on its machine is             ALNS for solving the Port Scheduling Problem. The authors used a CP
+not known beforehand. We also define a set 𝜇𝑖 = {𝜙𝑖,𝑘 , ∀𝑘 ∈ 𝑀𝑖 } to                solver as a search intensification mechanism to further improve local
+represent all the available execution modes per operation 𝑖, i.e., all the          optima produced by a local search heuristic. Recently, similar hybrid
+different machines where an operation 𝑖 can be processed. The set 𝜇𝑖                algorithms have been proposed for shop scheduling problems. Abreu
+
+                                                                                6
+G.A. Kasapidis et al.                                                                                                             European Journal of Operational Research xxx (xxxx) xxx
+
+
+
+
+   𝐴𝑙𝑡𝑒𝑟𝑛𝑎𝑡𝑖𝑣𝑒(𝜏𝑖 , 𝜇𝑖 )                                                                                                                              ∀𝑖 ∈ 𝛺                     (2)
+
+   𝑆𝑡𝑎𝑟𝑡𝑂𝑓 (𝜏𝑖 ) ≥ 𝐸𝑛𝑑𝑂𝑓 (𝜏𝑗 )                                                                                                             ∀𝑖 ∈ 𝛺, ∀𝑗 ∈ 𝛺𝑖−                      (3)
+
+   𝑁𝑜𝑂𝑣𝑒𝑟𝑙𝑎𝑝(𝜎𝑘 )                                                                                                                                    ∀𝑘 ∈ 𝑀                      (4)
+    ∑
+    𝑛 ∑
+                𝑃 𝑢𝑙𝑠𝑒(𝜙𝑖,𝑘 , 𝑢𝑖,𝑘,𝑟 ) ≤ 𝑈̄ 𝑟                                                                                                         ∀𝑟 ∈ 𝑈                     (5)
+    𝑖=1 𝑘∈𝑀𝑖
+
+      ∑
+      𝑛
+               𝑃 𝑢𝑙𝑠𝑒(𝜏𝑖 , 1) ≤ 𝑇̄𝑟                                                                                                                   ∀𝑟 ∈ 𝑇                     (6)
+    𝑖=1|𝑟∈𝑇𝑖
+
+   𝑃 𝑟𝑒𝑠𝑒𝑛𝑐𝑒𝑂𝑓 (𝜙𝑏𝑖,𝑘 ) = 𝑃 𝑟𝑒𝑠𝑒𝑛𝑐𝑒𝑂𝑓 (𝜙𝑖,𝑘 )                                                                                              ∀𝑖 ∈ 𝛺, ∀𝑘 ∈ 𝑀𝑖                       (7)
+          ∑
+          𝑛
+   𝑌𝑘 =         𝑃 𝑢𝑙𝑠𝑒(𝜙𝑏𝑖,𝑘 , 1)                                                                                                          ∀𝑘 ∈ 𝑀, 𝑘 ∈ 𝑀𝑖                        (8)
+          𝑖=1
+
+   𝐴𝑙𝑤𝑎𝑦𝑠𝐼𝑛(𝑌𝑘 , 𝜙𝑖,𝑘 , 0, 𝑦𝑘 )                                                                                                            ∀𝑖 ∈ 𝛺, ∀𝑘 ∈ 𝑀𝑖                       (9)
+
+   𝑆𝑡𝑎𝑟𝑡𝑂𝑓 (𝜙𝑏𝑖,𝑘 ) = 𝐸𝑛𝑑𝑂𝑓 (𝜙𝑖,𝑘 )                                                                                                        ∀𝑖 ∈ 𝛺, ∀𝑘 ∈ 𝑀𝑖                     (10)
+
+   𝐸𝑛𝑑𝑂𝑓 (𝜙𝑏𝑖,𝑘 ) = 𝑆𝑡𝑎𝑟𝑡𝑂𝑓 (𝜏𝑗 )                                                                                               ∀𝑖 ∈ 𝛺, ∀𝑗 ∈ 𝛺𝑖+ , ∀𝑘 ∈ 𝑀𝑖                     (11)
+       ∑                                             ∑
+                𝑆𝑡𝑒𝑝𝐴𝑡𝐸𝑛𝑑(𝜏𝑖∗ , 𝑄𝑗,𝑟 ) −                    𝑆𝑡𝑒𝑝𝐴𝑡𝑆𝑡𝑎𝑟𝑡(𝜏𝑖◦ , 𝑄𝑗,𝑟 ) ≥ 0                                                              ∀𝑟 ∈ 𝑅                   (12)
+                                    𝑗                                         𝑗
+    𝑗∈𝐽 |𝑟∈𝑅+                                   𝑗∈𝐽 |𝑟∈𝑅−
+                                                        𝑗
+            𝑗
+                {                                                                                 }
+       ∑              ∑                                         ∑
+                                𝑆𝑡𝑒𝑝𝐴𝑡𝐸𝑛𝑑(𝜏𝑖∗ , 𝑄𝑗,𝑟 ) −                  𝑆𝑡𝑒𝑝𝐴𝑡𝑆𝑡𝑎𝑟𝑡(𝜏𝑖◦ , 𝑄𝑗,𝑟 ) ≤ 𝑊̄ 𝑧                                            ∀𝑧 ∈ 𝑊                    (13)
+                                                 𝑗                                       𝑗
+    𝑟∈𝑅|𝑊𝑟 =𝑧       𝑗∈𝐽 |𝑟∈𝑅+                                 𝑗∈𝐽 |𝑟∈𝑅−
+                                                                      𝑗
+                            𝑗
+
+   𝐶𝑚𝑎𝑥 ≥ 𝐸𝑛𝑑𝑂𝑓 (𝜏𝑖 )                                                                                                                                 ∀𝑖 ∈ 𝛺                   (14)
+
+
+
+                                                                                              Box I.
+
+
+and Nagano (2022) proposed an ALNS-CP algorithm for a complex                                          even more enhanced shop scheduling variants by simply altering the
+variant of the open-shop scheduling problem that incorporates non-                                     underlying CP model.
+anticipatory sequence-dependent setup times. The authors highlight the                                     Algorithm 1 provides an overview of the proposed ALNS-CP. First,
+efficiency of the hybrid scheme, especially when large scale problem                                   the solution sets 𝐸 , 𝑇 are initialized. The set 𝐸 stores the ‘elite’
+instances are considered. Lastly, Yunusoglu and Yildiz (2023) studied                                  solutions encountered during the search, while 𝑇 is used to store the
+a variant of the FJSSP with lot streaming, setup and transport resource                                solutions of the current search trajectory. Then, an initial solution 𝑠
+constraints. A CP-based LNS algorithm was proposed that uses a single                                  is obtained by the CP solver using the 𝐶𝑃 𝑆𝑜𝑙𝑣𝑒𝐹 𝑢𝑙𝑙 meta-method. In
+destruction operator to remove a set of variables from the solution.                                   general, the CP solver is initialized using three arguments, (a) a start
+The authors proposed a custom branching strategy to guide the CP                                       solution, (b) a set of constraints to satisfy, and (c) a time limit. In
+towards the near-optimal repair of the partial solution. One of the major                              this case, no starting solution is used, the default set of constraints 
+differences of our ALNS-CP is that we use information gathered from                                    (Constraints (1)—(14)) is provided, while a self-tuned parameter 𝜃 is
+the search history to extract useful constraints that are fed into the                                 used as the time limit. The main loop of the algorithm consists of four
+CP model. These constraints are used to purposefully fix part of the                                   phases: (a) the operator selection, (b) the constraint generation, (c) the
+solution, that belongs to high quality solutions encountered during the                                solution reconstruction and (d) the improvement phase.
+search, while re-solving the remaining part of the solution by calling the                                 At the operator selection phase, a constraint extraction operator
+CP solver. We describe, in the following of the paper, the reasons that                                𝑝 is selected from the group of available operators . Note that,
+make this scheme particularly efficient in solving job shop scheduling                                 the selection is done in a roulette wheel fashion, which favours the
+problems with resource constraints.                                                                    operators that perform better at each iteration (see Section 4.3 for more
+    The aim of the ALNS-CP is to solve efficiently a wide variety of                                   details). The framework uses seven constraint extraction operators that
+FJSSP variants with resource constraints. In particular, the ALNS-CP                                   are presented in Section 4.1. At the constraint generation phase, a set
+uses well-known destruction operators that are effective for a wide                                    of constraints ́ is generated as a result of the application of 𝑝. Every
+range of scheduling problems, according to the relevant literature. In                                 constraint 𝑐 ∈ ́ refers to an operation-to-machine assignment or an
+addition, we propose new operators that use the search history to guide                                operation-to-operation relationship that could be fixed or neglected
+the search to promising regions of the solution space. Traditionally, the                              in the current iteration of the algorithm. The additional constraints
+destruction operators in ALNS are used to remove some elements from                                    significantly narrow the solution space and as a result the CP Solver
+a solution, or in other words to destruct a part of a solution (Ropke                                  can find an optimal solution, given the remaining non-fixed variables,
+& Pisinger, 2006), and subsequently heuristic procedures are used to                                   in short computational times. The set of constraints ́ is appended with
+repair that semi-complete solution. To the contrary, in our ALNS-CP,                                   additional constraints that are created by using the solutions of 𝑇 .
+the destruction operators produce a set of extra constraints to preserve                               These constraints ensure that every time the CP solver is called, the
+part of the solution, while at the same time reconstruct the remaining                                 search typically avoids revisiting solutions that have been encountered
+unfixed part of the solution by calling the CP solver. Based on this,                                  in the past. This rationale is inspired by the Tabu Search principle,
+instead of destruction operators we use the term constraint extraction                                 introduced by Glover and Laguna (1997) according to which solution
+operators throughout the paper, as it is more appropriate. It is worth                                 elements (or solution structures) are stored in a ‘‘tabu’’ list (our tra-
+mentioning that the proposed scheme can easily be adapted to solve                                     jectory list) so that the local search algorithm (our CP solver) avoids
+
+                                                                                                 7
+G.A. Kasapidis et al.                                                                                                European Journal of Operational Research xxx (xxxx) xxx
+
+
+revisiting them during the search. This process is described in more               4.1.1. The time window operator
+detail in Section 4.2.2.                                                               Given the current solution 𝑠, the time window operator selects the
+    At the reconstruction phase, the CP solver solves the problem using            operations that are being processed within a time window [𝑤𝑠𝑡𝑎𝑟𝑡 , 𝑤𝑒𝑛𝑑 ],
+the 𝐶𝑃 𝑆𝑜𝑙𝑣𝑒𝑆𝑒𝑞𝑢𝑒𝑛𝑡𝑖𝑎𝑙 meta-method. This method is used to denote                  and stores them in a set 𝐷. Subsequently, the machine assignments and
+that the CP-solver iteratively explores the search space for improved
+                                                                                   the machine precedence relationships of the remaining operations are
+solutions. The search continues until no further improvement can be
+                                                                                   fixed. The size of the time window is calculated based on the number
+found within the specified time limit. Upon completion, the method
+                                                                                   of selected operations 𝜌𝑛. In particular, the operator assumes that every
+returns a set of solutions  that includes all the encountered solutions                                                   𝐶𝑠
+                                                                                   operation 𝑖 ∈ 𝛺, has a contribution of 𝑚𝑎𝑥    to the makespan. Therefore,
+during the search. This time the CP solver is initialized with solution                                                       𝑛
+                                                                                   since 𝜌𝑛 operations are removed, the corresponding time span is 𝜌𝐶𝑚𝑎𝑥 𝑠
+𝑠 as the starting point of the search, the combined set of constraints
+     ́ and 𝜃 as the time limit per iteration of the solver. Next, every
+ ∪ ,                                                                             and it is described in Eq. (15) below:
+solution 𝑠 ∈  is inserted into 𝐸 as long as it satisfies specific criteria
+                                                                                   𝑤̄ = |𝑤𝑒𝑛𝑑 − 𝑤𝑠𝑡𝑎𝑟𝑡 | = 𝜌𝐶𝑚𝑎𝑥
+                                                                                                             𝑠
+                                                                                                                 .                                                    (15)
+as described in Section 4.2. Note that the size of the population 𝐸
+is controlled by the parameter 𝑁 𝐸 . Lastly, 𝑠 is replaced by the best                                                            𝑠
+                                                                                      The start of the time window 𝑤𝑠𝑡𝑎𝑟𝑡 ∈ [0, 𝐶𝑚𝑎𝑥   ̄ is selected at
+                                                                                                                                     − 𝑤]
+solution of  in terms of the makespan.
+                                                                                   random. Then, the set 𝐷 is populated as follows:
+    The improvement phase focuses on further improving the quality
+of the solution 𝑠 obtained earlier if 𝐶𝑚𝑎𝑥 𝑠       𝑠̂ , where 𝑠̂ denotes
+                                               < 𝐶𝑚𝑎𝑥                              𝐷 = {𝑖 ∶ 𝑖 ∈ 𝛺 ∧ 𝑆𝑡𝑎𝑟𝑡𝑂𝑓 (𝜏𝑖𝑠 ) ≤ 𝑤𝑒𝑛𝑑 ∧ 𝐸𝑛𝑑𝑂𝑓 (𝜏𝑖𝑠 ) ≥ 𝑤𝑠𝑡𝑎𝑟𝑡 }.                  (16)
+the best solution found so far in terms of the makespan. The aim is
+to intensify the search in the region of the solution space around the             Note that, 𝜏𝑖𝑠 is used to denote the value of the variable 𝜏𝑖 in a solution 𝑠.
+new best solution 𝑠. For this purpose, the CP solver is called by using               For every operation 𝑖 ∈ 𝛺 ⧵𝐷, its machine assignment is enforced to
+the following parameters: 𝑠 as the starting solution, the original set of          the corresponding value in 𝑠 by imposing the following set constraints:
+constraints  and the time limit 𝜃. Next, the solution 𝑠 is inserted to
+𝐸 and, 𝑇 if possible, the adaptive parameters 𝜌 and 𝜃 are updated                ́𝑀 = {𝑃 𝑟𝑒𝑠𝑒𝑛𝑐𝑒𝑂𝑓 (𝜙𝑖,𝑘 ) = 1,     ∀𝑘 ∈ 𝑀𝑖 ∶ 𝑃 𝑟𝑒𝑠𝑒𝑛𝑐𝑒𝑂𝑓 (𝜙𝑠𝑖,𝑘 ) = 1   ∀𝑖 ∈ 𝛺 ⧵ 𝐷}
+(see Section 5.1 for more details) and the framework continues to the
+                                                                                                                                                                      (17)
+next iteration. Lastly, the overall solution framework terminates when
+no improvement to the best solution found is observed for a number of
+                                                                                      The machine precedence relationships for all the operations of 𝛺⧵𝐷
+𝐺 iterations.
+                                                                                   are enforced using the following set of constraints:
+Algorithm 1 ALNS - CP
+                                                                                                    ́𝑅 = {𝐸𝑛𝑑𝐵𝑒𝑓 𝑜𝑟𝑒𝑆𝑡𝑎𝑟𝑡(𝜏𝑖 , 𝜏𝑗 )        ∀𝑘 ∈ 𝑀𝑖 ∩ 𝑀𝑗 ∶
+Require: 𝐺, 𝑁 𝐸 , 𝑁 𝑇 , 
+                                                                                   𝑃 𝑟𝑒𝑠𝑒𝑛𝑐𝑒𝑂𝑓 (𝜙𝑠𝑖,𝑘 ) = 𝑃 𝑟𝑒𝑠𝑒𝑛𝑐𝑒𝑂𝑓 (𝜙𝑠𝑗,𝑘 ) ∧ 𝐸𝑛𝑑𝑂𝑓 (𝜏𝑖𝑠 )
+ 1: 𝐸 ← ∅, 𝑇 ← ∅, 𝑔 ← 0, 𝑠̂ ← ∅, ́ ← ∅
+ 2: 𝑠 = CPSolveFull(∅, , 𝜃)                                                                            ≤ 𝑆𝑡𝑎𝑟𝑡𝑂𝑓 (𝜏𝑗𝑠 ), 𝑖 ≠ 𝑗     ∀𝑖, 𝑗 ∈ 𝛺 ⧵ 𝐷}                    (18)
+ 3: while 𝑔 < 𝐺 do
+ 4:    𝑝 = SelectOperator()                        ⊳ 1. Operator Selection           Constraints (17) and (18) ensure that all the operations that are pro-
+ 5:    ́ = 𝑝(𝑠, 𝜌, 𝑇 )                         ⊳ 2. Constraint Extraction        cessed outside the time window [𝑤𝑠𝑡𝑎𝑟𝑡 , 𝑤𝑒𝑛𝑑 ], are processed following
+ 6:     ← CPSolveSequential(s, ́ ∪ , 𝜃)     ⊳ 3. Solution Reconstruction        the same order and on the same machine as denoted by the solution 𝑠.
+ 7:    for each 𝑠́ ∈  do
+                                                                                   Lastly, the set of constraints ́ is defined as follows:
+ 8:                           ́ 𝐸 )
+           AddSolutionToPool(𝑠,
+ 9:    end for                                                                     ́ = ́𝑀 ∪ ́𝑅                                                                     (19)
+                    𝑠
+10:    𝑠 = argmin 𝐶𝑚𝑎𝑥
+               ∀𝑠∈
+                ́
+            𝑠     𝑠̂
+11:    if 𝐶𝑚𝑎𝑥 < 𝐶𝑚𝑎𝑥 then                         ⊳ 4. Improvement Phase
+12:        𝑠 ← CPSolveFull(𝑠, , 𝜃)                                                4.1.2. The block operator
+13:        𝑔 ← 0, 𝑇 ← 0, 𝑠̂ ← 𝑠                                                       This operator was first introduced by Palpant et al. (2004) for the
+14:    end if                                                                      RCPSP. In this paper, we adapt it for the FJSSP. The goal of this
+15:    UpdateAdaptiveParameters(𝜌, 𝜃)
+                                                                                   operator is to select 𝜌𝑛 operations that are processed in parallel in a
+16:    AddSolutionToPool(𝑠, 𝑇 )
+                                                                                   solution 𝑠. Algorithm 2 presents an overview of the block operator.
+17:    AddSolutionToPool(𝑠, 𝐸 )
+                                                                                   At first, an operation 𝑖 ∈ 𝛺 is selected at random and it is inserted
+18:    𝑔 ←𝑔+1
+19: end while                                                                      into the set 𝐷 and a queue structure 𝑄. In an iterative fashion, the
+20: return 𝑠̂                                                                      operator removes the first operation 𝑗 from 𝑄. Then, every operation
+                                                                                   𝑖 that satisfies 𝑆𝑡𝑎𝑟𝑡𝑂𝑓 (𝜏𝑖𝑠 ) ≤ 𝐸𝑛𝑑𝑂𝑓 (𝜏𝑗𝑠 ) ς 𝐸𝑛𝑑𝑂𝑓 (𝜏𝑖𝑠 ) ≥ 𝑆𝑡𝑎𝑟𝑡𝑂𝑓 (𝜏𝑗𝑠 )
+                                                                                   is added to 𝐷 and appended to 𝑄. This process is repeated until the
+4.1. The constraint extraction operators                                           required number of operations 𝜌𝑛 is selected. The constraint generation
+                                                                                   process for this operator is identical to the time window extraction
+    A core component of our ALNS-CP is the set of the constraint                   operator and therefore, Eqs. (17)–(19) can be used to populate the set
+extraction operators. The basic version of ALNS removes some elements              of constraints .́
+or structures of the solution by using destruction operators, and subse-
+quently re-inserts the removed elements back into the solution by using
+repair operators. In our proposed ALNS-CP, the constraint extraction               4.1.3. The machine removal operator
+operators play the role of the destruction operators. At each iteration,                                                                         ̄ ⊆ 𝑀,
+                                                                                      This operator focuses on a random subset of machines 𝑀
+a set of operations 𝐷 ⊂ 𝛺 is selected. Instead of removing these
+                                                                                   where |𝑀|̄ = 𝜌𝑚. Next, all the operations that are scheduled on any
+operations and trying to re-insert them with a heuristic mechanism,                              ̄ in a solution 𝑠 are stored in 𝐷. More specifically, the
+                                                                                   machine 𝑘 ∈ 𝑀
+we form a set of constraints ́ that is appended to the original set of
+                                                                                   operation set 𝐷 is populated as follows:
+constraints . In this way, we preserve a part of the solution, while
+‘‘destructing’’ and ‘‘rebuilding’’ the remaining part. The number of                                     ̄ ∶ 𝑃 𝑟𝑒𝑠𝑒𝑛𝑐𝑒𝑂𝑓 (𝜙𝑠 ) = 1}
+                                                                                   𝐷 = {𝑖 ∶ 𝑖 ∈ 𝛺 ∧ ∃𝑘 ∈ 𝑀                                                            (20)
+                                                                                                                           𝑖,𝑘
+operations selected by every operator is equal to 𝜌𝑛, where 0 < 𝜌 ≤ 1
+is a self-tuned parameter. In the following, we describe in detail the                Similarly to the time window and the block operators, the Eqs. (17)–
+proposed constraint extraction operators.                                                                                                              ́
+                                                                                   (19) can be used to extract the required constraints stored in set .
+
+                                                                               8
+G.A. Kasapidis et al.                                                                                                         European Journal of Operational Research xxx (xxxx) xxx
+
+
+Algorithm 2 The block operator                                                                constraints ́ is populated as follows.
+Require: s, 𝜌, n                                                                              ́ = {𝑃 𝑟𝑒𝑠𝑒𝑛𝑐𝑒𝑂𝑓 (𝜙𝑖,𝑘́ ) = 1 𝑘́ = argmax (𝑂𝑀𝑖,𝑘 ), ∀𝑖 ∈ 𝐷}.                     (23)
+ 1: Select at random 𝑖 ∈ 𝛺                                                                                                             ∀𝑘∈𝐴𝑖
+ 2: Create queue 𝑄, 𝐷 ← ∅
+                                                                                                  Again, if 𝐴𝑖 = ∅, no constraints are extracted. The elements of
+ 3: 𝑄.push(𝑖)
+                                                                                              𝑂𝑀 that have high values represent frequent operation-to-machine
+ 4: 𝐷 = {𝑖}
+ 5: while |𝐷| < 𝜌𝑛 do                                                                         assignments, which are considered to be desirable solution features,
+ 6:    𝑗 ← 𝑄.pop()                                                                            and therefore, we enforce the CP model to include them in any new
+ 7:    𝑉 ←∅                                                                                   solution obtained during the search.
+ 8:    for each 𝑖 ∈ 𝛺 ∶ 𝑖 ∉ 𝐷 do
+ 9:        if 𝑆𝑡𝑎𝑟𝑡𝑂𝑓 (𝜏𝑖𝑠 ) ≤ 𝐸𝑛𝑑𝑂𝑓 (𝜏𝑗𝑠 ) ς 𝐸𝑛𝑑𝑂𝑓 (𝜏𝑖𝑠 ) ≥ 𝑆𝑡𝑎𝑟𝑡𝑂𝑓 (𝜏𝑗𝑠 ) then              4.1.6. The machine assignment operator III
+10:            𝑉 = 𝑉 ∪ {𝑖}                                                                        MAO-III combines the operators MAO-I and MAO-II. Specifically, for
+11:        end if                                                                             every operation 𝑖 ∈ 𝐷, two sets of operation-to-machine assignments
+12:     end for                                                                               are defined: 𝐴1𝑖 ⊆ 𝑀𝑖 ∶ 𝑂𝑀𝑖,𝑘 ≤ 𝜉, ∀𝑘 ∈ 𝑀𝑖 and 𝐴2𝑖 ⊆ 𝑀𝑖 ∶ 𝑂𝑀𝑖,𝑘 ≥
+13:     Shuffle 𝑉
+                                                                                              1 − 𝜉, ∀𝑘 ∈ 𝑀𝑖 . Next, two sets of constraints are generated as follows:
+14:     for each 𝑖 ∈ 𝑉 do
+15:        𝑄.push(𝑖)                                                                          ́1 = {𝑃 𝑟𝑒𝑠𝑒𝑛𝑐𝑒𝑂𝑓 (𝜙𝑖,𝑘 ) = 0,      ∀𝑘 ∈ 𝐴1𝑖 , ∀𝑖 ∈ 𝐷}                           (24)
+16:        𝐷 = 𝐷 ∪ {𝑖}
+17:     end for                                                                               ́2 = {𝑃 𝑟𝑒𝑠𝑒𝑛𝑐𝑒𝑂𝑓 (𝜙𝑖,𝑘́ ) = 1,     𝑘́ = argmax (𝑂𝑀𝑖,𝑘 ), ∀𝑖 ∈ 𝐷}                (25)
+18: end while                                                                                                                            ∀𝑘∈𝐴2𝑖
+
+19: return
+                                                                                                  Lastly, the set of constraints ́ is defined as follows.
+
+                                                                                              ́ = ́1 ∪ ́2 .                                                                  (26)
+4.1.4. The Machine Assignment Operator I
+                                                                                              4.1.7. The Operation Relationship Operator
+    The main aim of the Machine Assignment Operator I (MAO-I) is to
+                                                                                                  Similarly to operators MAO-I, MAO-II, and MAO-III, the Operation
+identify operation-to-machine assignments that typically exist in high
+                                                                                              Relationship Operator (ORO) also uses a frequency map 𝑂𝑅 which
+quality solutions. To extract this information, we use the set of elite
+                                                                                              stores the frequency of operation pair-to-machine assignments. In par-
+solutions 𝐸 and a memory structure 𝑂𝑀, which we call a frequency
+                                                                                              ticular, the 𝑂𝑅 frequency map is represented by a three-dimensional
+map. This memory structure is populated using the information from
+                                                                                              matrix that holds the information regarding the precedence relationship
+a selected subset of solutions 𝑆 ⊂ 𝐸 , with |𝑆| = 𝜆𝑁 𝐸 , where 𝜆 is
+                                                                                              between a pair of operations scheduled at the same machine. Every
+a parameter (see Sections 5.1 and 5.2 for more details). In particular,
+                                                                                              element 𝑂𝑅𝑖,𝑗,𝑘 includes the frequency that an operation 𝑖 ∈ 𝛺 is
+𝑂𝑀 is represented by a two-dimensional matrix and holds the informa-
+                                                                                              scheduled (not necessarily immediately) before an operation 𝑗 ∈ 𝛺,
+tion regarding the assignment of single operations to machines. Every
+                                                                                              where 𝑗 ≠ 𝑖, at a particular machine 𝑘 ∈ 𝑀𝑖 ∩ 𝑀𝑗 :
+element 𝑂𝑀𝑖,𝑘 reflects the preference of an operation 𝑖 ∈ 𝛺 to be
+scheduled at the machine 𝑘 ∈ 𝑀𝑖 .                                                                           1 ∑
+                                                                                              𝑂𝑅𝑖,𝑗,𝑘 =            𝑃 𝑟𝑒𝑠𝑒𝑛𝑐𝑒𝑂𝑓 (𝜙𝑠𝑖,𝑘 ) ∧ 𝑃 𝑟𝑒𝑠𝑒𝑛𝑐𝑒𝑂𝑓 (𝜙𝑠𝑗,𝑘 )
+    The frequency map 𝑂𝑀 is initialized as follows: At first, the set of                                   |𝑆| 𝑠∈𝑆
+                                                                                                                                          (                                )
+elite solutions 𝑆 is populated by randomly selecting 𝜆𝑁 𝐸 solutions from                                                                ∧ 𝐸𝑛𝑑𝑂𝑓 (𝜙𝑠𝑖,𝑘 ) ≤ 𝑆𝑡𝑎𝑟𝑡𝑂𝑓 (𝜙𝑠𝑗,𝑘 )
+𝐸 . Next, all elements of 𝑂𝑀 are calculated using the formula below:
+                                                                                                                                                                                (27)
+            1 ∑
+𝑂𝑀𝑖,𝑘 =           𝑃 𝑟𝑒𝑠𝑒𝑛𝑐𝑒𝑂𝑓 (𝜙𝑠𝑖,𝑘 ).                              (21)
+          |𝑆| 𝑠∈𝑆                                                                                 Note that the normalization of Eq. (27) using the number of selected
+                                                                                              solutions |𝑆| = 𝜆𝑁 𝐸 , ensures that 0 ≤ 𝑂𝑅𝑖,𝑗,𝑘 ≤ 1.
+    Note that, 𝜙𝑠𝑖,𝑘 is used to denote the value of the variable 𝜙𝑖,𝑘 in                          Given the initialization of the frequency map 𝑂𝑅, ORO proceeds as
+a solution 𝑠, while the normalization of Eq. (21) using the number of                         follows: Let (𝑖, 𝑗) denote a pair of operations 𝑖, 𝑗 ∈ 𝛺. Also, let set 𝐵 be
+selected solutions, ensures that 0 ≤ 𝑂𝑀𝑖,𝑘 ≤ 1.                                               the set of all pairs of the operations of the problem:
+    After the initialization of the frequency map 𝑂𝑀, the operator                                    ⋃
+MAO-I populates the set 𝐷 with a random selection of 𝜌𝑛 operations.                           𝐵=            (𝑖, 𝑗).                                                   (28)
+                                                                                                    ∀𝑖,𝑗∈𝛺,𝑖≠𝑗
+Next, the operator identifies a set of operation-to-machine assignments
+𝐴𝑖 ⊆ 𝑀𝑖 ∶ 𝑂𝑀𝑖,𝑘 ≤ 𝜉 ∀𝑘 ∈ 𝑀𝑖 , ∀𝑖 ∈ 𝐷. The parameter 𝜉 is used to                                Given the set 𝐵, ORO identifies a set of operation pairs (𝑖, 𝑗) and a
+implicitly control the size of 𝐴𝑖 , i.e., the smaller the value of 𝜉 is, the                  machine 𝑘, 𝐷𝑘 that is defined as follows:
+fewer elements of 𝑂𝑀 are selected. More information about the values
+                                                                                              𝐷𝑘 = {(𝑖, 𝑗) ∶ 𝑂𝑅𝑖,𝑗,𝑘 ≥ 1 − 𝜉}       ∀(𝑖, 𝑗) ∈ 𝐵.                                (29)
+of the parameter 𝜉 are presented in Section 5.1. At a next step, the set
+of constraints ́ is populated as follows:                                                        The smaller the value of 𝜉 is, the more constraints that are extracted.
+                                                                                              The elements of 𝑂𝑅 with high values represent precedence relation-
+́ = {𝑃 𝑟𝑒𝑠𝑒𝑛𝑐𝑒𝑂𝑓 (𝜙𝑖,𝑘 ) = 0     ∀𝑘 ∈ 𝐴𝑖 , ∀𝑖 ∈ 𝐷}                                (22)       ships that have been frequently encountered between two operations
+                                                                                              𝑖 and 𝑗 at the machine 𝑘. These precedence relationships are typically
+    In the special case where 𝐴𝑖 = ∅, no constraints are extracted.
+                                                                                              considered to be components of high quality solutions, and therefore,
+The elements of 𝑂𝑀 that have lower values typically represent rare
+                                                                                              we choose to include them into the new solutions obtained. In our
+operation-to-machine assignments, and by imposing the associated con-
+                                                                                              implementation, the set of constraints ́ is defined as follows:
+straints, we enforce the CP model to exclude them from any new
+solution obtained during the search.                                                          ́ = {𝐸𝑛𝑑𝐵𝑒𝑓 𝑜𝑟𝑒𝑆𝑡𝑎𝑟𝑡(𝜙𝑖,𝑘 , 𝜙𝑗,𝑘 )      ∀(𝑖, 𝑗) ∈ 𝐷𝑘 , ∀𝑘 ∈ 𝑀}                   (30)
+
+                                                                                                   It is worth mentioning that the resulting constraints in ́ may be
+4.1.5. The machine assignment operator II                                                     conflicting with one another. Let us assume the operations
+    Similar to MAO-I, MAO-II populates the set 𝐷 by using a random                            {𝑖1 , 𝑖2 , … , 𝑖𝑜−1 , 𝑖𝑜 } ∈ 𝛺 that can be scheduled at a machine 𝑘, with 𝐷𝑘 =
+selection of 𝜌𝑛 operations. This operator identifies a set of assignments                     {(𝑖1 , 𝑖2 ), (𝑖2 , 𝑖3 ), … , (𝑖𝑜−1 , 𝑖𝑜 ), (𝑖𝑜 , 𝑖1 )} and 𝑜 ≥ 2. The set of constraints
+𝐴𝑖 ⊆ 𝑀𝑖 ∶ 𝑂𝑀𝑖,𝑘 ≥ 1 − 𝜉, ∀𝑘 ∈ 𝑀𝑖 , ∀𝑖 ∈ 𝐷. As a result, the smaller the                       {𝐸𝑛𝑑𝐵𝑒𝑓 𝑜𝑟𝑒𝑆𝑡𝑎𝑟𝑡(𝜙𝑖1 ,𝑘 , 𝜙𝑖2 ,𝑘 ), 𝐸𝑛𝑑𝐵𝑒𝑓 𝑜𝑟𝑒𝑆𝑡𝑎𝑟𝑡(𝜙𝑖2 ,𝑘 , 𝜙𝑖3 ,𝑘 ), … , 𝐸𝑛𝑑𝐵𝑒𝑓 𝑜
+value of 𝜉 is, the more elements of 𝑂𝑀 are selected. Next, the set of                         𝑟𝑒𝑆𝑡𝑎𝑟𝑡(𝜙𝑖𝑜−1 ,𝑘 , 𝜙𝑖𝑜 ,𝑘 ), 𝐸𝑛𝑑𝐵𝑒𝑓 𝑜𝑟𝑒𝑆𝑡𝑎𝑟𝑡(𝜙𝑖𝑜 ,𝑘 , 𝜙𝑖1 ,𝑘 )}, compose a CP model
+
+                                                                                          9
+G.A. Kasapidis et al.                                                                                                   European Journal of Operational Research xxx (xxxx) xxx
+
+
+that is infeasible. In order to restore feasibility, we choose to ne-                        the proposed ALNS-CP uses a roulette wheel selection mechanism for
+glect the constraint that corresponds to the operation relationship                          choosing the most suitable constraint extraction operator at each iter-
+with the smallest frequency, i.e. 𝑚𝑖𝑛(𝑂𝑅𝑖1 ,𝑖2 ,𝑘 , 𝑂𝑅𝑖2 ,𝑖3 ,𝑘 , … , 𝑂𝑅𝑖𝑜−1 ,𝑖𝑜 ,𝑘 ,        ation. The probability of selecting each operator is calculated based on
+𝑂𝑅𝑖𝑜 ,𝑖1 ,𝑘 ). This procedure is repeatedly applied until all conflicts are                  its performance during the search. In particular, every operator 𝑝 ∈ 
+resolved.                                                                                    is associated with a non-negative score 𝑣𝑝 . All scores are initialized at
+                                                                                             a value (e.g. 100) at the start of the algorithm. Each score is increased
+4.2. Population management                                                                   by one when a solution 𝑠 is successfully inserted to 𝐸 and decreased
+                                                                                             by one otherwise. Therefore, the selection probability 𝜁𝑝 of an operator
+    The proposed ALNS-CP uses a set of elite solutions 𝐸 and an                             𝑝 is calculated as follows:
+ordered list of solutions 𝑇 . The former is used to store the high quality                            𝑣𝑝
+solutions encountered throughout the search history, and the latter is                       𝜁𝑝 = ∑                                                                (37)
+                                                                                                     𝑝∈
+                                                                                                     ́    𝑣𝑝́
+used to store the trajectory of solutions encountered throughout the
+iterations of the algorithm. In this section, we describe the criteria that                      As described in Section 4.2.1, the elite set of solutions 𝐸 aims to
+we use in order to maintain and update 𝐸 and 𝑇 .                                           maintain a balance between the quality and diversity of elite solutions.
+                                                                                             Therefore, this adaptive mechanism rewards the operators not only in
+4.2.1. The elite set update criteria                                                         cases when they produce high quality solutions, but also when they
+     The set 𝐸 is used to store high quality and diverse solutions                          effectively diversify the search.
+encountered during the search. The following criteria are used to
+update the set 𝐸 : Let 𝑠𝑏 and 𝑠𝑤 denote the best and the worst solutions                    5. Computational results
+of 𝐸 in terms of the makespan, respectively. Let 𝑑ℎ (𝑠1 , 𝑠2 ) denote
+the Hamming distance between two solutions 𝑠1 and 𝑠2 (Kasapidis                                  This section presents the computational results derived by experi-
+et al., 2021). Also, let 𝑑̄ℎ (𝑠) denote the average Hamming distance of a                    ments on benchmark problem instances of the literature for assessing
+solution 𝑠 from the solutions of 𝐸 calculated as:                                           the performance of the proposed solution framework. Additionally, we
+            1    ∑                                                                           have generated new benchmark problem instances to explore the effect
+𝑑̄ℎ (𝑠) =            𝑑ℎ (𝑠, 𝑠)
+                            ́                                        (31)                    of different types of resources on the solution schedules.
+          | | 𝑠∈
+             𝐸
+               ́   𝐸
+                                                                                                 At first, Section 5.1 describes the adaptive tuning mechanism
+    Given the above, a solution 𝑠 is always inserted into 𝐸 , when                          adopted. Next, Section 5.2 provides implementation details, as well as
+           𝑠𝑏
+  𝑠
+𝐶𝑚𝑎𝑥 < 𝐶𝑚𝑎𝑥   ∨ |𝐸 | < 𝑁 𝐸 . On the other hand, a solution 𝑠 is always                      the parameter tuning of the proposed solution framework. Section 5.3
+discarded when 𝑠 ∈ 𝐸 ∨𝑑̄ℎ (𝑠) < min({𝑑̄ℎ (𝑠)
+                                           ́ ∀𝑠́ ∈ 𝐸 }). If there exists a                  presents the computational results produced by applying the ALNS-
+                           𝑠𝑏              𝑠𝑤              𝑠́ ) ∧ (𝑑̄ (𝑠) ≥
+solution 𝑠́ ∈ 𝐸 where (𝐶𝑚𝑎𝑥      𝑠
+                               < 𝐶𝑚𝑎𝑥 < 𝐶𝑚𝑎𝑥        𝑠
+                                              ) ∧ (𝐶𝑚𝑎𝑥 ≤ 𝐶𝑚𝑎𝑥       ℎ                       CP and the CP model alone to solve benchmark problem instances of
+𝑑̄ℎ (𝑠)),
+     ́ then ś is replaced by 𝑠. If more solutions exist that satisfy the                     the literature. Lastly, Section 5.4 presents the results of a thorough
+above criteria, we choose to replace one that has the largest makespan.                      experimentation on new problem instances with different types of
+To break ties between solutions ś in terms of the makespan, we remove                        resources.
+the solution that has the smallest Hamming distance 𝑑̄ℎ (𝑠).
+                                                         ́ At any other
+case, 𝑠𝑤 is replaced.                                                                        5.1. The adaptive parameter tuning mechanism
+
+4.2.2. The trajectory list update criteria                                                       The proposed ALNS-CP algorithm uses six used-defined parameters
+    The list 𝑇 is used to store the 𝑁 𝑇 most recently visited solutions                     𝑁𝐸 , 𝑁𝑇 , 𝐺, 𝛿, 𝛾, 𝜆 that remain constant for the entire run-time of the
+during the search. Its main goal is to prevent the CP solver from                            algorithm and three self-tuned parameters 𝜌, 𝜉, 𝑡 that are adaptively
+revisiting the same solution during subsequent runs of the CP solver.                        tuned during the search.
+A new solution 𝑠 is always appended to the end of the list, while a                              The parameter 𝑁 𝐸 is used to control the size of the elite solution
+solution 𝑠́ is removed from the top of the list if |𝑇 | = 𝑁 𝑇 .                             set 𝐸 . High values of 𝑁 𝐸 may delay the convergence, whereas low
+    During the constraint extraction phase, a constraint 𝑐𝑠 is constructed                   values of 𝑁 𝐸 may lead to a premature convergence. As described in
+for each solution 𝑠 ∈ 𝑇 as follows:                                                         Section 4.2.2, the parameter 𝑁 𝑇 directly controls the size of the 𝑇 ,
+      ⋀                                                                                      which keeps the trajectory of solutions encountered throughout the it-
+𝑐𝑠1 =    𝑃 𝑟𝑒𝑠𝑒𝑛𝑐𝑒𝑂𝑓 (𝜙𝑖,𝑘 ) = 1, ∀𝑘 ∈ 𝑀𝑖 ∶ 𝑃 𝑟𝑒𝑠𝑒𝑛𝑐𝑒𝑂𝑓 (𝜙𝑠𝑖,𝑘 ) = 1 (32)
+                                                                                             erations of the algorithm. Low values of 𝑁 𝑇 may cause the algorithm to
+        𝑖∈𝛺
+        ⋀     ⋀       (                               )                                      get trapped in local minima, while higher values may cause a premature
+𝑐𝑠2 =                  𝐸𝑛𝑑𝑂𝑓 (𝜙𝑖,𝑘 ) ≤ 𝑆𝑡𝑎𝑟𝑡𝑂𝑓 (𝜙𝑗,𝑘 )
+        𝑖∈𝛺 𝑗∈𝛺∶𝑖≠𝑗
+                                                                                             diversification of the search. Note that, the trajectory list 𝑇 plays the
+         (                                 )                                                 role of a tabu tenure list, which is a core component in a Tabu Search
+        ∧ 𝐸𝑛𝑑𝑂𝑓 (𝜙𝑠𝑖,𝑘 ) ≤ 𝑆𝑡𝑎𝑟𝑡𝑂𝑓 (𝜙𝑠𝑗,𝑘 ) ,                                                algorithm (Glover & Laguna, 1997). The parameter 𝐺 controls the
+                                                                                             number of maximum iterations of the algorithm without improvement,
+         ∀𝑘 ∈ 𝑀𝑖 ∩ 𝑀𝑗 ∶ 𝑃 𝑟𝑒𝑠𝑒𝑛𝑐𝑒𝑂𝑓 (𝜙𝑠𝑖,𝑘 ) ∧ 𝑃 𝑟𝑒𝑠𝑒𝑛𝑐𝑒𝑂𝑓 (𝜙𝑠𝑗,𝑘 ) = 1        (33)
+                                                                                             while the parameter 𝜆 controls the portion of 𝐸 that is used by the
+𝑐𝑠 = 𝑐𝑠1 ∧ 𝑐𝑠2                                                                 (34)          extraction operators MAO I–III and ORO, for the initialization of the
+                                                                                             frequency maps 𝑂𝑀 and 𝑂𝑅.
+    The constraint 𝑐𝑠 prevents the CP solver from obtaining the solution
+                                                                                                 The self-tuned parameter 𝜌, that controls the size of the set 𝐷,
+𝑠. The set of constraints ́𝑇 is used to store the corresponding con-
+                                                                                             is adaptively tuned as follows: In a span of 𝛾 iterations, we record
+straints for all the solutions of 𝑇 , which are appended to the set of
+                                                                                             the number of iterations 𝛾 𝑜𝑝𝑡 where the CP solver was able to solve
+constraints ́ during the constraint generation phase:
+                                                                                             a problem to optimality. Then, the parameter 𝜌 is updated using the
+́𝑇 = {𝑐𝑠 ,      ∀𝑠 ∈ 𝑇 }                                                     (35)          following recursive equation:
+
+ ́ = ́ ∪ ́𝑇                                                                 (36)                  2𝛾 𝑜𝑝𝑡 − 𝛾
+                                                                                             𝜌=𝜌+               𝛿                                                        (38)
+                                                                                                          𝛾
+4.3. Constraint extraction operator selection                                                where the user-defined parameter 𝛿 controls the maximum increment
+                                                                                             of the parameter 𝜌. When the value of 𝜌 and therefore the size of 𝐷
+   A common feature of ALNS algorithms is the adaptive selection                             is very small, the CP solver may be able to solve the vast majority of
+of destruction or repair operators. In accordance with the literature,                       problems to optimality, i.e., 𝛾 𝑜𝑝𝑡 > 𝛾2 and therefore, 𝜌 increases. This
+
+                                                                                        10
+G.A. Kasapidis et al.                                                                                       European Journal of Operational Research xxx (xxxx) xxx
+
+
+allows the construction of larger sub-problems in the next iterations of              Regarding all experiments conducted in this paper, for every prob-
+the algorithm. On the other hand, if the values of 𝜌 are very high, the CP        lem instance, we used ten runs of the ALNS-CP, and we report the
+solver may not be able to solve a lot of problems to optimality. Follow-          best solution in terms of the makespan. A time limit of 1000 seconds
+ing Eq. (38), when 𝛾 𝑜𝑝𝑡 < 𝛾2 , 𝜌 decreases so that smaller sub-problems          is applied for every run of the ALNS-CP, if the maximum number of 𝐺
+are explored in the next iterations of the algorithm. Additionally, the           iterations is not reached. Note that, a time limit of 1800 seconds was
+self-tuned parameter 𝜃 controls the time allocated to the CP solver.              used regarding the experiments conducted using the CP optimizer. The
+This parameter is automatically increased by one when the CP solver               ALNS-CP was developed in C++ and uses IBM ILOG CP Solver 20.1.0
+is able to solve a sub-problem to optimality, and decreased by one                as the CP solver. All experiments were executed using an Intel Xeon
+otherwise (Hojabri et al., 2018). This adaptive tuning process, controls          E5-2650 processor with 32 GB of RAM. Lastly, the CP optimizer was
+parameters 𝜌 and 𝜃 so that the CP solver is able to optimally solve the           used with the default search configuration.
+largest possible sub-problems, in the shortest amount of time. Note that,
+very small values of 𝛿 may significantly slow down the tuning process.            5.3. Computational experiments on existing benchmark datasets
+    Lastly, the self-tuned parameter 𝜉 is selected based on the prob-
+lem flexibility 𝑓 . For example, a low value of 𝑓 indicates that ev-                  In this section, we present computational results derived by experi-
+ery operation can be assigned to a small number of machines. This                 ments of the ALNS-CP and the CP model on existing problem instances
+means that the corresponding values for the elements of the 𝑂𝑀                    of the literature. In particular, Sections 5.3.1–5.3.3 present compu-
+and 𝑂𝑅 frequency maps are relatively high. Similarly, high values of              tational results for the FJSSP, the BJSSP and the Unrelated Parallel
+𝑓 mean that an operation can be scheduled to a larger number of                   Machine scheduling problem with Resources (UPMR), respectively.
+machines and therefore the associated values of the frequency maps
+are expected to be relatively low. Based on the above, the rate 𝜉                 5.3.1. Comparative performance analysis for the FJSSP
+should be in principle higher for problems with high values of 𝑓 ,                    This section presents computational results of experiments on well-
+and lower for problems with lower values of 𝑓 to enable the opera-                known problem instances of the FJSSP literature. More specifically, the
+tors MAO-I, MAO-II, MAO-III and ORO to select a sufficient number                 following benchmark sets are used: the BRData (Brandimarte, 1993),
+of operation-to-machine assignments and operation pair-to-machine                 the BCData (Barnes & Chambers, 1996), the HUData (Hurink et al.,
+assignments. In our implementation, three ranges of values for the                1994) and the DPData (Dauzère-Pérès & Paulli, 1997). Note that, three
+parameter 𝜉 are used: 𝐴𝜉 = {0.01, 0.025, 0.05, 0.075, 0.10} where 𝑓 <             problem groups are included in the benchmark set HUData, namely
+2, 𝐵 𝜉 = {0.05, 0.075, 0.10, 0.125, 0.15} where 2 ≤ 𝑓 < 3 and 𝐶 𝜉 =               edata, vdata and rdata. The performance of the ALNS-CP is compared to
+{0.10, 0.125, 0.15, 0.175, 0.20} where 𝑓 ≥ 3. A random value for 𝜉 is             the state-of-the-art algorithms for the FJSSP, namely, the Evolutionary
+selected from the corresponding range at each iteration.                          Algorithm (EA) by Kasapidis et al. (2021), the Scatter Search and Path
+                                                                                  Relinking (SSPR) algorithm by González et al. (2015), the Harmony
+5.2. Implementation details and parameter tuning                                  Search algorithm (HHS) by Yuan et al. (2013), the Hybrid Genetic
+                                                                                  Algorithm (hGA) by Gao et al. (2008) and the Discrepancy Search
+    All computational experiments of this paper were conducted by                 Algorithm (CDDS) by Ben Hmida et al. (2010).
+using the following parameter values: 𝑁 𝐸 = 200, 𝑁 𝑇 = 25, 𝐺 = 50,                    Table 3 summarizes the computational results for the BRData, DP-
+𝛿 = 0.1, 𝛾 = 20 and 𝜆 = 0.5. These values have been chosen after prelim-          Data and BCData, respectively. The first column contains the name of
+inary experiments and we describe in the following the rationale and              the problem instance, while the second column lists the performance
+the process followed. Regarding the parameter 𝛿, several values were              indicators, i.e., the Average makespan (Avg. 𝐶𝑚𝑎𝑥 ), the Average gap %
+tested. Higher values deteriorated the performance of the search, since           (Avg. Gap (%)) from the known lower bounds, the number of optimal
+the size of the generated sub-problems fluctuated between very large              solutions (# Opt) and the Computer Independent CPU time (CICPU)
+and very small sizes. On the other hand, very low values cause a very             time, for each benchmark set. Note that, we used the best known lower
+slow convergence of the adaptive tuning process. Similarly, low values            bound, according to Mastrolilli and Gambardella (2000), to calculate
+for 𝛾, caused a premature change on the sub-problem size and therefore,           the average gap. The remaining columns include the computational
+compromise the intensification of the search. On the other hand, high             results of the ALNS-CP and the CP model and the computational results
+values of 𝛾 may deteriorate the performance of the algorithm, since the           of the state-of-the-art algorithms. The CICPU is calculated based on the
+convergence is also delayed. Preliminary computational experiments                normalization coefficients from Dongarra (1992). Since our CPU is not
+that varied the values of 𝑁 𝑇 from 20 to 100 did not show a signifi-              included in Dongarra (1992), we use the single thread CPU rating as
+cant impact on the performance of the algorithm. Nevertheless, if this            reported in 𝑐𝑝𝑢𝑏𝑒𝑛𝑐ℎ𝑚𝑎𝑟𝑘.𝑛𝑒𝑡 in order to calculate the corresponding
+parameter is neglected, the ALNS-CP tends to revisit past solutions. As           normalization coefficient for our machine. As indicated by both Yuan
+described above, the parameter 𝑁 𝑇 resembles the tabu tenure of Tabu              et al. (2013) and González et al. (2015), ‘‘the comparison between CI-
+Search algorithms where the commonly accepted range typically falls               CPU times is meant to be indicative, because we do not have access
+between 20 and 30 (Glover & Laguna, 1997), and we therefore set 𝑁 𝑇 =             to other information that influences the computation time, such as the
+25. To determine a well performing set of values for the parameter 𝑁 𝐸 ,          operating systems, the programming language, the compiler selection,
+but also the portion 𝜆 of 𝐸 used for the initialization of the frequency         and the overall code quality’’. The average gap (%) per instance is
+                                                                                                 𝐶    −𝐿𝐵
+maps, the following experiment was performed. We selected a total                 calculated as 𝑚𝑎𝑥  𝐿𝐵
+                                                                                                          , where LB denotes the available lower bound per
+of ten hard-to-solve instances of the FJSSP and the BJSSP literature.             instance. The results for the problem instances included in the 𝐻𝑈 𝐷𝑎𝑡𝑎
+More specifically, for the FJSSP the problem instances 𝑚𝑘06 and 𝑚𝑘10              benchmark set are presented in Table 4. Table 4 includes a summary
+from 𝐵𝑅𝐷𝑎𝑡𝑎 data set (Brandimarte, 1993), and the problem instances               of the average gap values, i.e., the first column contains the name of
+16𝑎, 17𝑎 and 18𝑎 from the 𝐷𝑃 𝐷𝑎𝑡𝑎 (Dauzère-Pérès & Paulli, 1997) data             the algorithm, and the next columns include the average gap values for
+set were selected. Regarding the BJSSP, five instances were chosen at             the 𝑒𝑑𝑎𝑡𝑎, 𝑟𝑑𝑎𝑡𝑎 and 𝑣𝑑𝑎𝑡𝑎 problem groups, respectively.
+random from the benchmark set provided by Lawrence (1984), namely                     Overall, the results showcase the effectiveness of the ALNS-CP
+the instances 𝑙𝑎18, 𝑙𝑎25, 𝑙𝑎30, 𝑙𝑎35 and 𝑙𝑎38. All problems were solved by        compared to the state-of-the-art algorithms proposed for the FJSSP. The
+using 16 combinations of parameter settings: 𝑁 𝐸 ∈ {50, 100, 200, 300}            ALNS-CP produced solutions with an average gap of 3.59% and 1.75%
+and 𝜆 ∈ {0.25, 0.50, 0.75, 1.0}. For each combination, ten runs of the            for the BRData and the DPData benchmark sets, respectively, which
+ALNS-CP were performed. The remaining parameters were initialized as              makes it the fourth and third best performing algorithm. Also, the EA
+described above. The best computational results were derived by using             is the best performing algorithm for the BRData and DPData, whereas
+𝑁 𝐸 = 200 and 𝜆 = 0.5.                                                            it comes second for BCData. Regarding the BCData benchmark set, the
+
+                                                                             11
+G.A. Kasapidis et al.                                                                                                                  European Journal of Operational Research xxx (xxxx) xxx
+
+                   Table 3
+                   Summary of computational results for the BRData, DPData and BCData benchmark sets.
+                      Dataset                                    ALNS-CP            CP                 EA            SSPR          CDDS           hGA            HHS
+                                        Avg. 𝐶𝑚𝑎𝑥                172.70             172.90             172.20        172.40        172.70         172.60         173.20
+                                        Avg. Gap (%)             3.59               3.70               3.17          3.27          3.60           3.54           4.02
+                      BRData
+                                        # Opt.                   6                  6                  6             6             6              6              6
+                                        CICPU                    1204               9882               824           383           96             91             –
+                                        Avg. 𝐶𝑚𝑎𝑥                2209.44            2216.83            2202.00       2203.50       2211.56        2215.56        2210.22
+                                        Avg. Gap (%)             1.75               2.09               1.40          1.47          1.84           2.02           1.78
+                      DPData
+                                        # Opt.                   3                  3                  4             3             1              0              2
+                                        CICPU                    8622               29 855             6320          1934          2890           6206           6279
+                                        Avg. 𝐶𝑚𝑎𝑥                995.19             995.19             995.33        995.52        997.10         929.60         –
+                                        Avg. Gap (%)             0.00               0.00               0.02          0.03          0.19           0.25           –
+                      BCData
+                                        # Opt.                   21                 21                 20            18            7              9              –
+                                        CICPU                    997                275                968           1138          253            821            –
+
+
+Table 4                                                                                                     solution per instance. We calculated the corresponding RPD values
+Average gap (%) of various solutions methods for the HUData benchmark set (problem
+                                                                                                            using the best known solutions reported by Pranzo and Pacciarelli
+instances la01 to la40 and mt06/10/20).
+                                                                                                            (2016), Oddi et al. (2012), Dabah et al. (2016, 2019). Also, since
+ Dataset       ALNS-CP          CP            EA         SSPR         HHS          hGA          CDDS
+                                                                                                            lower bound values are not available, the number of best solutions is
+ edata         2.01             2.07          1.99       2.03         2.11         2.13         2.32
+                                                                                                            reported instead of the number of optimal solutions, i.e., the number
+ rdata         0.95             1.16          0.94       1.03         1.18         1.17         1.34
+ vdata         0.02             0.05          0.05       0.04         0.11         0.08         0.11
+                                                                                                            of instances that the corresponding algorithm obtained the current best
+                                                                                                            known solution. Overall, one can observe that the ALNS-CP produced
+                                                                                                            solutions with an average RPD value of 1.17%, which makes it the
+Table 5                                                                                                     second best performing algorithm compared to the state-of-the-art. The
+Summary of computational results for the Lawrence (1984) benchmark set.
+                                                                                                            ALNS-CP managed to obtain ten new best solutions (indicated by a
+                    ALNS-CP      CP                PTS          PBB          IGM          IFS
+                                                                                                            parenthesis on the table) for the problem instances la14, la15, la26,
+ Avg. 𝐶𝑚𝑎𝑥          1509.03      1604.98           1501.25      1551.25      1589.13      1602.83           la27, la28, la30, la31, la32, la34 and la39 (see Appendix C for detailed
+ Avg. RPD (%)       1.17         7.23              0.70         2.58         5.11         5.72
+                                                                                                            results).
+ # Best. (NB)       20 (10)      1 (0)             15           21           7            6
+ CICPU              31 169       100 080           –            –            24 000       85 553
+                                                                                                            5.3.3. Comparative performance analysis for UPMR
+                                                                                                                This section assesses the performance of the proposed ALNS-CP
+                                                                                                            algorithm for the UPMR. The UPMR is an extension of the unrelated
+ALNS-CP managed to find optimal solutions for all problem instances,                                        parallel machines scheduling problem (UPM). The main difference
+and ranked as the best performing algorithm. Similarly, regarding the                                       between the UMP and the FJSSP is that operations can be processed
+HUData benchmark set, the ALNS-CP is the second best performing                                             on all the available machines 𝑘 ∈ 𝑀, with 𝑀𝑖 = 𝑀, ∀𝑖 ∈ 𝛺. The UPMR
+algorithm for the 𝑒𝑑𝑎𝑡𝑎 and 𝑟𝑑𝑎𝑡𝑎 problem sets (after the EA), while                                        extends the UPM by considering additional renewable resources. This
+it performs better than all the state-of-the-art algorithms for the 𝑣𝑑𝑎𝑡𝑎                                   problem is also a special case of the FJSSP with resource constraints,
+problem set. In total, the ALNS-CP produced 14 new best solutions for                                       and the resources used in UPMR are a representative example of utility
+problem instances of the 𝑟𝑑𝑎𝑡𝑎 and the 𝑣𝑑𝑎𝑡𝑎 problem sets. Detailed                                         resources.
+results of the ALNS-CP algorithm and the proposed CP model for all                                              For this purpose, the problem instances of Fanjul-Peyro et al. (2017)
+examined FJSSP problem instances, as well as a detailed performance                                         were used. This benchmark data set includes two groups of problem
+comparison to the state-of-the-art, are provided in Appendix B of the                                       instances. The first includes small-scale problem instances with 8 ≤
+online companion.                                                                                           𝑙 ≤ 16, while the second includes medium-scale problem instances with
+                                                                                                            20 ≤ 𝑙 ≤ 30. Since the small-scale problem instances are easy to solve,
+5.3.2. Comparative performance analysis for BJSSP                                                           in this paper we have only used the medium-scale problem instances,
+    This section assesses the performance of the ALNS-CP for the BJSSP.                                     and we compare our results with the algorithms of Fanjul-Peyro et al.
+The main difference between the BJSSP and the JSSP is the presence                                          (2017) and Fleszar and Hindi (2018).
+of the blocking constraints (see Section 3.1). Two variants of the BJSSP                                        The medium-scale benchmark set includes 450 problem instances
+exist in the literature, namely the Blocking-With-Swap (BWS) and the                                        in total and Table 6 presents a summary of the computational results.
+Blocking-No-Swap (BNS). The BWS variant can be considered as a                                              The first column includes the number of jobs, and the second column
+special case of the FJSSP with resource constraints, where |𝑀𝑖 | = 1,                                       includes the number of instances that share the same number of jobs.
+∀𝑖 ∈ 𝛺 and 𝑦𝑘 = 0, ∀𝑘 ∈ 𝑀, and this is the variant we focus on this                                         The next four multi-columns include the computational results of the
+section.                                                                                                    algorithms presented by Fleszar and Hindi (2018) (FH), Fanjul-Peyro
+    The problem instances of Lawrence (1984) for the JSSP were used as                                      et al. (2017) (FP), the ALNS-CP and the CP model, respectively. Each
+the test bed for the BJSSP. The performance of the proposed ALNS-CP                                         multi-column includes the number of optimal solutions and the number
+and the CP model are compared with the Parallel Tabu Search (PTS) al-                                       of new best solutions obtained by the ALNS-CP in a parenthesis. The
+gorithm by Dabah et al. (2019), the Parallel Branch and Bound method                                        second column presents the average gap (%) per instance group from
+(PBB) of Dabah et al. (2016), the Iterated Greedy Meta-heuristic (IGM)                                      the lower bounds reported in Fleszar and Hindi (2018). The last three
+of Pranzo and Pacciarelli (2016) and the Iterative Flattening Search                                        rows of the table present the total optimal solutions obtained, the total
+(IFS) algorithm of Oddi et al. (2012).                                                                      average gap (%) and the CICPU time, respectively.
+    The results of these computational experiments are presented in                                             One can observe that the ALNS-CP improves the total average
+Table 5. The structure of the table is similar to the structure of Table 3.                                 gap of 450 problem instances by 0.01%, compared to Fleszar and
+Note that, Table 5 includes the average relative percentage deviation                                       Hindi (2018), but it needed more computational time. The results also
+(Avg. RPD (%)) from the best known solutions instead of the average                                         show that the off-the-shelf CP solver is unable to produce high quality
+gap (%), since lower bound values are not available. The RPD per                                            solutions in short computational times, without the high level guidance
+                                        𝑏
+                                 𝐶𝑚𝑎𝑥 −𝐶𝑚𝑎𝑥
+instance is calculated as                               𝑏
+                                               , where 𝐶𝑚𝑎𝑥 denotes the best known
+                                        𝑏
+                                       𝐶𝑚𝑎𝑥
+                                                                                                            of our ALNS framework. In total, the ALNS-CP obtained 407 optimal
+
+                                                                                                       12
+G.A. Kasapidis et al.                                                                                               European Journal of Operational Research xxx (xxxx) xxx
+
+         Table 6
+         Summary of computational results for the UPMR.
+           l            #         ALNS-CP                        CP                              FH                                  FP
+                                  # Opt (NB)       Avg.Gap (%)   # Opt       Avg.Gap (%)         # Opt         Avg.Gap (%)           # Opt        Avg.Gap (%)
+           20           150       134 (5)          0.08          119         0.21                134           0.10                  92           1.08
+           25           150       138 (5)          0.08          112         0.39                139           0.09                  76           2.21
+           30           150       135 (5)          0.08          88          0.45                135           0.09                  79           2.22
+           # Opt. (NB)                      407 (15)                       319                              408                                 247
+           Avg.Gap (%)                        0.08                        0.35                              0.09                                1.97
+           CICPU (s)                         25 934                      224 503                           17 848                                 –
+
+
+
+
+solutions, including 15 new best solutions (see Appendix D for detailed
+results).
+
+5.4. Computational experiments on new data sets with multiple types of
+resources
+
+    In this section, the aim is to study the effect of various resources
+types on the solution schedules, and for this purpose, we have gener-
+ated new small and large-scale problem instances. Sections 5.4.1–5.4.3
+present an analysis of experiments on problems that feature limited
+capacity buffers, tool renewable resources and arbitrary resources and
+WIP buffers, respectively. For these experiments, the CP model is used
+to solve the corresponding problems. Lastly, Section 5.4.4 presents
+results on new large-scale problem instances that include all available
+resource types. The generated benchmark sets are available in the
+following repository: https://github.com/gkasapidis/RCFJSSP.                                          Fig. 3. Average 𝐶𝑚𝑎𝑥 for different values of 𝛽.
+
+5.4.1. Computational experiments on problem instances with limited capac-
+ity buffers
+                                                                                    instances were generated with a variable number of jobs and machines
+    To study the effect of the limited capacity buffer constraints to the
+                                                                                    per instance. The number of available tools 𝐿𝑇 was set to 10, whereas
+makespan, a set of ten representative problem instances have been
+                                                                                    the amount of instances per tool was controlled by the parameter 𝛽 that
+generated. These problem instances were produced so that they are
+                                                                                    varied according to 𝛽 ∈ {10%, 25%, 50%, 75%, 100%}. For example, if ten
+large and complex enough, but at the same time solvable to optimality
+                                                                                    operations require a tool 𝑟 ∈ 𝑇 and 𝛽 = 100%, then all operations can
+in a reasonable computational time. The generated problem instances
+                                                                                    be processed in parallel. In a different case, if 𝛽 = 10% the amount of
+share the same number of jobs and the same number of machines, but
+                                                                                    tool instances would be limited to 1, and therefore, the operations must
+differ in terms of machine assignments and processing times, while the
+                                                                                    compete for the available tool instances, which leads to waiting times
+buffer capacities are set ≤ 2. We consider three different cases: (a)
+                                                                                    and prolonged schedules.
+zero capacity buffers, (b) random capacity buffers 0 ≤ 𝑦𝑘 ≤ 1, ∀𝑘 ∈
+𝑀 and (c) unlimited capacity buffers. The computational results are                     The computational results are presented in Table 8. Each multi-
+presented in Table 7. The first four columns present the name of the                column shows the results for the values of 𝛽 = 10%, 𝛽 = 25%, 𝛽 =
+problem instance, the number of jobs 𝑙, the number of machines 𝑚 and                50%, 𝛽 = 75% and 𝛽 = 100% and includes four columns. The first
+the number of operations 𝑛. The next three multi-columns include the                column presents the lower bound (𝐿𝐵), the second column presents the
+computational results for each case. Each multi-column includes four                makespan (𝐶𝑚𝑎𝑥 ), the third column presents the gap from LB (𝐺𝑎𝑝(%))
+columns, that present the lower bound (LB), the makespan (𝐶𝑚𝑎𝑥 ), the               and the fourth column includes the computational time required in
+gap from LB (𝐺𝑎𝑝(%)) and the time required to solve the instance by                 seconds (𝑇 𝑖𝑚𝑒(𝑠)).
+the proposed CP model (Time (s)). The last row provides the average                     One can observe an increase of the makespan as the tool availability
+values.                                                                             decreases. More specifically, when 𝛽 = 10% the average makespan
+    All problem instances were solved to optimality via the proposed                is 111.5, whereas when 𝛽 = 100% the average makespan is 103.4.
+CP model. As the overall capacity of buffers increases, we notice a                 It is worth mentioning that, the impact on the makespan gradually
+decrease of the average makespan as well as the average time required               decreases as 𝛽 increases. In particular, when 𝛽 increases from 10% to
+to solve all problem instances. More specifically, we observe an average            25%, the makespan decreases by 4.75%, when 𝛽 increases from 25%
+makespan of 95.90 for problem instances with zero capacity buffers. In              to 50%, the makespan decreases by 2.35% and lastly, when 𝛽 increases
+the case of random capacity buffers, the average makespan decreases to              from 50% to 75%, the makespan decreases by 0.30%. Given a limited
+93.80, which can be attributed to the fact that machines can store job              availability of the tools, we can observe that a good enough value for
+operations in the corresponding buffers without blocking the machines.              𝛽 is 50%, since from that point and on-wards the improvement of the
+The same effect is prominent in the case of unlimited buffers, where no             solution quality is marginal (see Fig. 3).
+blocking is imposed to any machine, and therefore, the smallest average
+makespan of 91.30 is obtained. We can lastly observe that the average
+computational time increases as the capacity of the buffers decreases.              5.4.3. Computational experiments on problem instances with arbitrary re-
+                                                                                    sources and WIP buffers
+5.4.2. Computational experiments on problem instances with tool con-                    In this section, we study the effect of cumulative and non-renewable
+straints                                                                            resources in the form of WIP buffers and arbitrary resources on the
+    In this section, we study the effect of the tool resource constraints           makespan. For this purpose, ten problem instances with resource con-
+with respect to the makespan. For this purpose, ten new problem                     straints were generated with 𝐿𝑊 = 2 and 𝐿𝑅 = 10. Three cases are
+
+                                                                             13
+G.A. Kasapidis et al.                                                                                                                                   European Journal of Operational Research xxx (xxxx) xxx
+
+                   Table 7
+                   Computational results on experiments with limited capacity buffers.
+                    Instance      𝑙        𝑚   𝑛      w/ Machine buffers                           w/o Buffers                                         Unlimited buffers
+                                                      LB      𝐶𝑚𝑎𝑥    Gap (%)       Time(s)        LB          𝐶𝑚𝑎𝑥      Gap (%)       Time (s)        LB      𝐶𝑚𝑎𝑥     Gap (%)        Time (s)
+                    lcb0          4        5          102     102     0.00          0.05           102         102       0.00          0.02            102     102      0.00           0.01
+                    lcb1          4        5           95     95      0.00          0.03            95         95        0.00          0.02             88     88       0.00           0.01
+                    lcb2          4        5           88     88      0.00          0.02            91         91        0.00          0.02             88     88       0.00           0.01
+                    lcb3          4        5           95     95      0.00          0.02            95         95        0.00          0.02             95     95       0.00           0.01
+                    lcb4          4        5           99     99      0.00          0.04           101         101       0.00          0.04             93     93       0.00           0.02
+                    lcb5          4        5           98     98      0.00          0.02           105         105       0.00          0.06             95     95       0.00           0.01
+                    lcb6          4        5           92     92      0.00          0.03            92         92        0.00          0.03             88     88       0.00           0.01
+                    lcb7          4        5           84     84      0.00          0.02            86         86        0.00          0.02             84     84       0.00           0.01
+                    lcb8          4        5           88     88      0.00          0.02            92         92        0.00          0.03             86     86       0.00           0.01
+                    lcb9          4        5           97     97      0.00          0.02           100         100       0.00          1.31             94     94       0.00           0.01
+                    Avg                                       93.8    0.00          0.03                       95.9      0.00          0.15                    91.3     0.00           0.01
+
+
+
+
+Table 8
+Computational results on problems with tool resource constraints.
+ Instance    𝛽 = 10%                                  𝛽 = 25%                                𝛽 = 50%                                     𝛽 = 75%                                  𝛽 = 100%
+             LB     𝐶𝑚𝑎𝑥       Gap      Time (s)      LB      𝐶𝑚𝑎𝑥    Gap       Time (s)     LB         𝐶𝑚𝑎𝑥      Gap      Time (s)      LB       𝐶𝑚𝑎𝑥       Gap      Time (s)    LB      𝐶𝑚𝑎𝑥    Gap    Time (s)
+ t0          107    107        0.00     0.39          101     101     0.00       0.17        100        100       0.00      0.01         100      100        0.00      0.01       100     100     0.00    0.01
+ t1          103    103        0.00     0.61          101     101     0.00       0.49         97        97        0.00      0.19          97      97         0.00      0.18        97     97      0.00    0.52
+ t2          107    107        0.00     0.32          102     102     0.00       0.33        102        102       0.00      0.18         101      101        0.00      0.26       101     101     0.00    0.21
+ t3          114    114        0.00     5.08          105     105     0.00       1.40         99        99        0.00      2.66          99      99         0.00      1.76        99     99      0.00    1.34
+ t4          116    116        0.00     1.20          110     110     0.00       0.28        108        108       0.00      0.53         107      107        0.00      0.33       107     107     0.00    0.35
+ t5          108    108        0.00     1.84          101     101     0.00       0.95         99        99        0.00      0.57          99      99         0.00      0.23        99     99      0.00    0.34
+ t6          105    105        0.00     1.57           98     98      0.00       0.78         97        97        0.00      0.48          97      97         0.00      0.56        97     97      0.00    0.60
+ t7          118    118        0.00     7.22          114     114     0.00       1.89        113        113       0.00      2.69         112      112        0.00      2.11       112     112     0.00    1.60
+ t8          118    118        0.00     4.16          115     115     0.00      14.20        112        112       0.00     21.90         112      112        0.00     27.25       112     112     0.00   19.98
+ t9          119    119        0.00     0.24          115     115     0.00       0.50        110        110       0.00      0.36         110      110        0.00      0.45       110     110     0.00    0.75
+ Avg                111.5      0.00     2.26                  106.2   0.00       2.10                   103.7     0.00      2.96                  103.4      0.00      3.31               103.4   0.00    2.57
+
+
+
+
+                   Table 9
+                   Computational results on experiments with non renewable resources and WIP buffers.
+                    Instance          Small buffers                                     Large buffers                                             No buffers
+                                      LB       𝐶𝑚𝑎𝑥         Gap (%)     Time(s)         LB         𝐶𝑚𝑎𝑥          Gap (%)        Time (s)          LB         𝐶𝑚𝑎𝑥      Gap (%)          Time(s)
+                    r0                82       82           0.00         5.12           71         71            0.00           0.81              63         63        0.00             0.19
+                    r1                69       69           0.00         0.22           65         65            0.00           0.04              37         37        0.00             0.16
+                    r2                54       54           0.00         0.41           54         54            0.00           0.11              33         33        0.00             0.08
+                    r3                69       69           0.00         3.47           65         65            0.00           0.92              50         50        0.00             0.95
+                    r4                64       64           0.00         0.19           62         62            0.00           0.11              45         45        0.00             0.48
+                    r5                72       72           0.00         0.51           70         70            0.00           0.47              53         53        0.00             0.40
+                    r6                72       72           0.00         0.12           69         69            0.00           0.12              42         42        0.00             0.15
+                    r7                99       99           0.00         1.01           85         85            0.00           0.13              57         57        0.00             0.19
+                    r8                79       79           0.00        13.73           71         71            0.00           3.02              65         65        0.00             0.05
+                    r9                74       74           0.00         0.30           63         63            0.00           0.04              44         44        0.00             0.49
+                    Avg                        73.4         0.00         2.51                      67.5          0.00           0.58                         48.9      0.00             0.31
+
+
+
+
+considered: (a) low capacity WIP buffers, (b) high capacity WIP buffers                                         5.4.4. Computational experiments on problem instances with combined
+and (c) unlimited capacity WIP buffers.                                                                         resources
+
+    The computational results are presented in Table 9 that shares                                                   In this section, we consider problem instances that feature a com-
+the same structure with Tables 7 and 8. In particular, the table has                                            bination of all resource types supported by the proposed CP model,
+three multi-columns and each multi-column shows the results for low                                             i.e., limited capacity buffers, utility resources, tool resources, arbitrary
+capacity WIP buffers, high capacity WIP buffers and unlimited WIP                                               non-renewable resources and WIP buffers. In order to generate the
+buffers. One can observe that the makespan decreases as the size of the                                         problem instances, the following parameter ranges were used: 10 ≤ 𝑙 ≤
+WIP buffer increases. More specifically, we notice an average makespan                                          15, 5 ≤ 𝑚 ≤ 10, 5 ≤ 𝜂𝑖,𝑘 ≤ 20, 2 ≤ 𝑓 ≤ 4, 1 ≤ 𝐿𝑇 ≤ 5, 1 ≤ 𝐿𝑈 ≤ 3,
+of 73.40 for low capacity WIP buffers and an average makespan of                                                𝐿𝑊 = 2, 𝐿𝑅 = 8, 0 ≤ 𝑦𝑘 ≤ 3, 8 ≤ 𝑈̄ 𝑟 ≤ 10, 1 ≤ 𝑇̄𝑟 ≤ 5. In total,
+67.50 for high capacity WIP buffers, which corresponds to a decrease of                                         we generated ten representative problem instances (𝑙𝑐𝑏𝑟𝑡𝑢0 − 𝑙𝑐𝑏𝑟𝑡𝑢9)
+almost 8%. When unlimited WIP buffers are considered, we notice an                                              that were solved using the CP model as well as the proposed ALNS-CP
+even more significant decrease of the makespan to 48.90, i.e. a 27.6%                                           algorithm.
+decrease from the case of high capacity buffers. We can observe that                                                The computational results are presented in Table 10. The table
+the WIP buffers significantly affect the solution quality. Lastly, in terms                                     includes two multi-columns that present the results produced by the CP
+of the computational time, we notice that the average time needed to                                            model and the ALNS-CP, respectively. One can observe the superiority
+obtain an optimal solution for small buffers is significantly larger than                                       of the ALNS-CP. The ALNS-CP has overall a better average gap of
+the other two cases.                                                                                            17.43% compared to 19.11% of the CP model, while this average gap
+
+                                                                                                         14
+G.A. Kasapidis et al.                                                                                                    European Journal of Operational Research xxx (xxxx) xxx
+
+Table 10                                                                                    In terms of future research, it would be worth considering multiple
+Computational results on generated large-scale problem instances.
+                                                                                        resource-related objectives, such as the maximization of the utilization
+ Instance     CP                                       ALNS-CP                          of buffers, the minimization of resource consumption rates and the min-
+              LB        𝐶𝑚𝑎𝑥    Gap (%)    Time (s)    𝐶𝑚𝑎𝑥    Gap (%)   Time(s)        imization of energy costs or carbon footprint. Regarding the solution
+ lcbrtu0      293       352     20.14      1800        345     18.43     623.45         framework, it would be worth exploring the use of machine learning to
+ lcbrtu1      299       312      4.35      1800        312      4.35     179.86         predict a useful set of constraints and enable the CP solver to propagate
+ lcbrtu2      258       280      8.53      1800        278      7.36     476.44
+                                                                                        constraints more effectively.
+ lcbrtu3      297       411     38.38      1800        405     29.97     495.88
+ lcbrtu4      288       322     11.81      1800        314      8.33     604.69
+ lcbrtu5      276       359     30.07      1800        356     27.90     643.44         CRediT authorship contribution statement
+ lcbrtu6      283       299      5.65      1800        297      4.59     231.97
+ lcbrtu7      264       290      9.85      1800        288      8.33     283.92
+ lcbrtu8      256       406     58.59      1800        390     47.27     800.39             Gregory A. Kasapidis: Writing – review & editing, Writing – orig-
+ lcbrtu9      294       305      3.74      1800        305      3.74     206.70         inal draft, Software, Methodology, Investigation, Conceptualization.
+ Avg                    333.6   19.11      1800        329     17.43     454.67         Dimitris C. Paraskevopoulos: Writing – review & editing, Writing –
+                                                                                        original draft, Supervision, Methodology, Conceptualization. Ioannis
+                                                                                        Mourtos: Writing – review & editing, Writing – original draft, Super-
+                                                                                        vision. Panagiotis P. Repoussis: Writing – review & editing, Writing
+is achieved in much shorter computational times. These results indicate                 – original draft, Supervision, Conceptualization.
+the applicability of the proposed ALNS-CP for solving a wide variety of
+flexible job shop scheduling problems with resource constraints.
+                                                                                        Acknowledgements
+6. Conclusions and future research
+                                                                                           The authors would like to gratefully acknowledge support from the
+    This paper studied the FJSSP with renewable, non-renewable as                       European Commission [FACTLOG Project, award number 869951] and
+well as cumulative resources. A novel unified solution framework was                    the Athens University of Economics and Business Research Center.
+proposed for solving the FJSSP with and without resource constraints.
+This framework consists of an adaptive large neighbourhood search that                  Appendix A. Supplementary data
+uses a CP solver (ALNS-CP) for generating new solutions and exploring
+the solution space. In particular, the proposed ALNS-CP uses long-term                      Supplementary material related to this article can be found online
+memory structures that hold information about single operation-to-                      at https://doi.org/10.1016/j.ejor.2024.08.010.
+machine assignments and operation pair-to-machine assignments that
+have been encountered in high quality and diverse solutions through                     References
+the search history. This information is translated into constraint expres-
+sions that are imposed to the CP solver. The goal was to guide the CP                   Abreu, L. R., & Nagano, M. S. (2022). A new hybridization of adaptive large
+solver towards promising regions of the solution space.                                     neighborhood search with constraint programming for open shop scheduling with
+    To evaluate the performance of the proposed CP model and the                            sequence-dependent setup times. Computers & Industrial Engineering, 168.
+ALNS-CP algorithm, we used well-known benchmark data sets from                          Aggoun, A., & Beldiceanu, N. (1993). Extending chip in order to solve complex
+                                                                                            scheduling and placement problems. Math and Comp. Model., 17(7), 57–73.
+the FJSSP, the UPMR and the BJSSP literature. The computational
+                                                                                        Agnetis, A., Murgia, G., & Sbrilli, S. (2014). A job shop scheduling problem with human
+results show that the ALNS-CP is highly competitive compared to the                         operators in handicraft production. International Journal of Production Research,
+state-of-the-art algorithms of the literature for solving flexible job shop                 52(13), 3820–3831.
+scheduling problems with resource constraints, while it outperforms the                 Andrade-Pineda, J. L., Canca, D., Gonzalez-R, P. L., & Calle, M. (2020). Scheduling a
+CP solver. Moreover, the ALNS-CP managed to produce 15 new best                             dual-resource flexible job shop with makespan and due date-related criteria. Anal.
+                                                                                            Oper. Res., 291(1–2), 5–35.
+solutions for the UPMR problem instances, ten new best solutions for
+                                                                                        Aschauer, A., Roetzer, F., Steinboeck, A., & Kugi, A. (2017). An efficient algo-
+the BJSSP problem instances and 14 new best solutions for the FJSSP                         rithm for scheduling a flexible job shop with blocking and no-wait constraints.
+problem instances.                                                                          IFAC-PapersOnLine, 50(1), 12490–12495.
+    Three different sets of experiments were conducted using new small-                 Aschauer, A., Roetzer, F., Steinboeck, A., & Kugi, A. (2018). Scheduling of a flexible
+scale problem instances to study the effect of various resource types                       job shop with multiple constraints. IFAC-PapersOnLine, 51(11), 1293–1298.
+on the makespan. More specifically, we studied the effect of limited                    Azzi, A., Faccio, M., Persona, A., & Sgarbossa, F. (2012). Lot splitting scheduling
+                                                                                            procedure for makespan reduction and machine capacity increase in a hybrid flow
+capacity buffers, renewable discrete resources and non-renewable re-
+                                                                                            shop with batch production. Int. J. Adv. Manuf. Syst., 59(5–8), 775–786.
+sources combined with WIP buffers. In the first set of experiments, the                 Barnes, J. W., & Chambers, J. B. (1996). Tabu search for the flexible-routing job
+focus was on testing various capacities for the machine buffers. The                        shop problem. The University of Texas, Austin, TX, Technical Report Series ORP96-10,
+results showed that the zero capacity buffers caused a 5.03% increase                       Graduate Program in Operations Research and Industrial Engineering, 1–11.
+of the makespan compared to the case of unlimited capacity buffers,                     van der Beek, T., Souravlias, D., van Essen, J. T., Pruyn, J., & Aardal, K. (2024). Hybrid
+                                                                                            differential evolution algorithm for the resource constrained project scheduling
+whereas, when random capacity buffers are considered, the makespan
+                                                                                            problem with a flexible project structure and consumption and production of
+increased by 2.73%. In the second set of experiments, the focus was                         resources. European Journal of Operational Research, 313(1), 92–111.
+on testing various settings for the availability of tools. The results                  Beezão, A. C., Cordeau, J. F., Laporte, G., & Yanasse, H. H. (2017). Scheduling identical
+showed that high quality solutions could be obtained by considering                         parallel machines with tooling constraints. European Journal of Operational Research,
+a 50% tool availability, since higher availability values seemed not to                     257(3), 834–844.
+                                                                                        Belaid, R., T’Kindt, V., & Esswein, C. (2012). Scheduling batches in flowshop with
+have any significant effect on the reduction of the makespan. In the
+                                                                                            limited buffers in the shampoo industry. European Journal of Operational Research,
+third set of experiments, we studied the effect of small and large WIP                      223(2), 560–572.
+buffers on the makespan. The results showed that small WIP buffers                      Ben Hmida, A., Haouari, M., Huguet, M.-J., & Lopez, P. (2010). Discrepancy search for
+can have a significant impact on the makespan (e.g., 50.10% increase                        the flexible job shop scheduling problem. Computers & Operations Research, 37(12),
+compared to the case of unlimited WIP buffers). Lastly, we conducted                        2192–2201.
+                                                                                        Bitar, A., Dauzère-Pérès, S., Yugma, C., & Roussel, R. (2016). A memetic algorithm to
+computational experiments on new problem instances combining all
+                                                                                            solve an unrelated parallel machine scheduling problem with auxiliary resources
+resource types. The results verified the superiority of the ALNS-CP                         in semiconductor manufacturing. Journal of Scheduling, 19(4), 367–376.
+framework compared to solving the problem by using an off-the-shelf                     Błażewicz, J., Cellary, W., Słowiński, R., & Węglarz, J. (1986). vol. 7, Scheduling Under
+CP solver.                                                                                  Resource Constraints: Deterministic Models (pp. 1–359). Basel: J.C.Baltzer AG.
+
+
+                                                                                   15
+G.A. Kasapidis et al.                                                                                                              European Journal of Operational Research xxx (xxxx) xxx
+
+
+Boufellouh, R., & Belkaid, F. (2020). Bi-objective optimization algorithms for joint pro-        Gröflin, H., Pham, D. N., & Bürgy, R. (2011). The flexible blocking job shop with
+    duction and maintenance scheduling under a global resource constraint: Application                transfer and set-up times. Journal of Combinatorial Optimization, 22(2), 121–144.
+    to the permutation flow shop problem. Computers & Operations Research, 122, Article          Györgyi, P., & Kis, T. (2017). Approximation schemes for parallel machine scheduling
+    104943.                                                                                           with non-renewable resources. European Journal of Operational Research, 258(1),
+Brandimarte, P. (1993). Routing and scheduling in a flexible job shop by tabu search.                 113–123.
+    Anal. Oper. Res., 41(3), 157–183.                                                            Györgyi, P., & Kis, T. (2018). Minimizing the maximum lateness on a single machine
+Brucker, P., Drexl, A., Mohring, R., Neumann, K., & Pesch, E. (1999). Resource-                       with raw material constraints by branch-and-cut. Computers & Industrial Engineering,
+    constrained project scheduling: Notation, classification, models, and methods.                    115, 220–225.
+    European Journal of Operational Research, 112(1), 3–41.                                      Györgyi, P., & Kis, T. (2019). Minimizing total weighted completion time on a single
+Brucker, P., Heitmann, S., Hurink, J., & Nieberg, T. (2006). Job-shop scheduling with                 machine subject to non-renewable resource constraints. Journal of Scheduling, 22(6),
+    limited capacity buffers. OR Spectr., 28(2), 151–176.                                             623–634.
+Brucker, P., & Schlie, R. (1990). Job-shop scheduling with multi-purpose machines.               Hanzálek, Z., & Šůcha, P. (2017). Time symmetry of resource constrained project
+    Computing.                                                                                        scheduling with general temporal constraints and take-give resources. Anal. Oper.
+Campos Ciro, G., Dugardin, F., Yalaoui, F., & Kelly, R. (2016). Open shop scheduling                  Res., 248(1), 209–237.
+    problem with a multi-skills resource constraint: A genetic algorithm and an ant              Hartmann, S., & Briskorn, D. (2022). An updated survey of variants and exten-
+    colony optimisation approach. International Journal of Production Research, 54(16),               sions of the resource-constrained project scheduling problem. European Journal of
+    4854–4881.                                                                                        Operational Research, 297, 1–14.
+Carlier, J. (1982). The one-machine sequencing problem. European Journal of Operational          Hashimoto, S., & Mizuno, S. (2021). A tight approximation ratio of a list scheduling
+    Research, 11(1), 42–47.                                                                           algorithm for a single-machine scheduling problem with a non-renewable resource.
+Chakrabortty, R. K., Abbasi, A., & Ryan, M. J. (2020). Multi-mode resource-                           Journal of Scheduling, 24(3), 259–267.
+    constrained project scheduling using modified variable neighborhood search                   Hellsten, E. O., Sacramento, D., & Pisinger, D. (2020). An adaptive large neighbourhood
+    heuristic. International Journal of Production Research, 27(1), 138–167.                          search heuristic for routing and scheduling feeder vessels in multi-terminal ports.
+Chan, F. T., Wong, T. C., & Chan, L. Y. (2006). Flexible job-shop scheduling problem                  European Journal of Operational Research, 287(2), 682–698.
+    under resource constraints. International Journal of Production Research, 44(11),            Herr, O., & Goel, A. (2016). Minimising total tardiness for a single machine schedul-
+    2071–2089.                                                                                        ing problem with family setups and resource constraints. European Journal of
+Coelho, J., & Vanhoucke, M. (2011). Multi-mode resource-constrained project schedul-                  Operational Research, 248(1), 123–135.
+    ing using RCPSP and SAT solvers. European Journal of Operational Research, 213(1),           Hojabri, H., Gendreau, M., Potvin, J. Y., & Rousseau, L. M. (2018). Large neigh-
+    73–82.                                                                                            borhood search with constraint programming for a vehicle routing problem with
+Dabah, A., Bendjoudi, A., & Aitzai, A. (2016). Efficient parallel B&B method for                      synchronization constraints. Computers & Operations Research, 92, 87–97.
+    the blocking job shop scheduling problem. 2016 International Conference on High              Hurink, J., Jurisch, B., & Thole, M. (1994). Tabu search for the job-shop scheduling
+    Performance Computing and Simulation, 784–791.                                                    problem with multi-purpose machines. OR Spectr., 225(1981), 223–225.
+                                                                                                 Kasapidis, G. A., Paraskevopoulos, D. C., Repoussis, P. P., & Tarantilis, C. D. (2021).
+Dabah, A., Bendjoudi, A., AitZai, A., & Taboudjemat, N. N. (2019). Efficient parallel
+                                                                                                      Flexible job shop scheduling problems with arbitrary precedence graphs. Prod. Oper.
+    tabu search for the blocking job shop scheduling problem. Soft Computing, 23(24),
+                                                                                                      Manag., 30(11), 4044–4068.
+    13283–13295.
+                                                                                                 Kovacs, A. A., Parragh, S. N., Doerner, K. F., & Hartl, R. F. (2012). Adaptive large
+Dauzère-Pérès, S., & Paulli, J. (1997). An integrated approach for modeling and solving
+                                                                                                      neighborhood search for service technician routing and scheduling problems.
+    the general multiprocessor job-shop scheduling problem using tabu search. Anal.
+                                                                                                      Journal of Scheduling, 15, 579–600.
+    Oper. Res., 70, 281–306.
+                                                                                                 Kreter, S., Schutt, A., Stuckey, P. J., & Zimmermann, J. a. (2018). vol. 266, Mixed-
+Debels, D., & Vanhoucke, M. (2007). A decomposition-based genetic algorithm for
+                                                                                                      integer linear programming and constraint programming formulations for solving resource
+    the resource-constrained project-scheduling problem. Operations Research, 55(3),
+                                                                                                      availability cost problems (pp. 472–486). Elsevier B.V..
+    457–469.
+                                                                                                 Kreter, S., Schutt, A., & Stuckey, P. J. a. (2017). Using constraint programming for
+Dongarra, J. J. (1992). Performance of various computers using standard linear
+                                                                                                      solving RCPSP/max-cal. Constraints, 22, 432–462.
+    equations software. ACM SIGARCH Computer Architecture News.
+                                                                                                 Laborie, P., Rogerie, J., Shaw, P., & Vilím, P. (2018). IBM ILOG CP optimizer for
+Elloumi, S., Fortemps, P., & cir Loukil, T. (2017). Multi-objective algorithms to multi-
+                                                                                                      scheduling: 20+ years of scheduling with constraints at IBM/ILOG. Constraints,
+    mode resource-constrained projects under mode change disruption. Computers &
+                                                                                                      23(2), 210–250.
+    Industrial Engineering, 106, 161–173.
+                                                                                                 Latorre-Núñez, G., Lüer-Villagra, A., Marianov, V., Obreque, C., Ramis, F., & Neriz, L.
+Elmaraghy, H., Patel, V., & Abdallah, I. B. (2000). Scheduling of manufacturing systems
+                                                                                                      (2016). Scheduling operating rooms with consideration of all resources, post
+    under dual-resource constraints using genetic algorithms. Journal of Manufacturing
+                                                                                                      anesthesia beds and emergency surgeries. Computers & Industrial Engineering, 97,
+    Systems, 19(3), 186–201.
+                                                                                                      248–257.
+Fan, J., Zhang, C., Liu, Q., Shen, W., & Gao, L. (2022). An improved genetic algorithm
+                                                                                                 Lawrence, S. (1984). Resource constrained project scheduling: an experimental investigation
+    for flexible job shop scheduling problem considering reconfigurable machine tools
+                                                                                                      of heuristic scheduling techniques (Supplement): Technical report, Graduate School of
+    with limited auxiliary modules. Journal of Manufacturing Systems, 62(November
+                                                                                                      Industrial Administration, Carnegie Mellon University.
+    2021), 650–667.                                                                              Leenaerts, D. M. W., & Bokhoven, W. M. G. V. (1998). Piecewise Linear Modeling and
+Fanjul-Peyro, L., Perea, F., & Ruiz, R. (2017). Models and matheuristics for the                      Analysis. Springer New York, NY.
+    unrelated parallel machine scheduling problem with additional resources. European            Lei, D., & Guo, X. (2014). Variable neighbourhood search for dual-resource constrained
+    Journal of Operational Research, 260(2), 482–493.                                                 flexible job shop scheduling. International Journal of Production Research, 52(9),
+Figielska, E. (2014). A heuristic for scheduling in a two-stage hybrid flowshop with                  2519–2529.
+    renewable resources shared among the stages. European Journal of Operational                 Li, Y., Carabelli, S., Fadda, E., Manerba, D., Tadei, R., & Terzo, O. (2020). Machine
+    Research, 236(2), 433–444.                                                                        learning and optimization for production rescheduling in industry 4.0. Int. J. Adv.
+Figielska, E. (2018). Scheduling in a two-stage flowshop with parallel unrelated                      Manuf. Syst., 110(9–10), 2445–2463.
+    machines at each stage and shared resources. Computers & Industrial Engineering,             Li, K., Chen, J., Fu, H., Jia, Z., & Fu, W. (2019). Uniform parallel machine scheduling
+    126, 435–450.                                                                                     with fuzzy processing times under resource consumption constraint. Applied Soft
+Fleszar, K., & Hindi, K. S. (2018). Algorithms for the unrelated parallel machine                     Computing, 82, Article 105585.
+    scheduling problem with a resource constraint. European Journal of Operational               Li, X., & Gao, L. (2020). Effective Methods for Integrated Process Planning and Scheduling
+    Research, 271(3), 839–848.                                                                        (p. 462). Heidelberg: Springer Berlin.
+Gao, J., Sun, L., & Gen, M. (2008). A hybrid genetic and variable neighborhood                   Li, J., Huang, Y., & Niu, X. (2016). A branch population genetic algorithm for
+    descent algorithm for flexible job shop scheduling problems. Computers & Operations               dual-resource constrained job shop scheduling problem. Computers & Industrial
+    Research, 35(9), 2892–2907.                                                                       Engineering, 102, 113–131.
+Gehring, M., Volk, R., & Schultmann, F. (2022). On the integration of diverging material         Liu, S. Q., Kozan, E., Masoud, M., Zhang, Y., & Chan, F. T. (2018). Job shop scheduling
+    flows into resource-constrained project scheduling. European Journal of Operational               with a combination of four buffering constraints. International Journal of Production
+    Research, 303, 1071–1087.                                                                         Research, 56(9), 3274–3293.
+Glover, F., & Laguna, M. (1997). Tabu Search. Norwell, MA, USA: Kluwer Academic                  Liu, Q., Zhan, M., Chekem, F. O., Shao, X., Ying, B., & Sutherland, J. W. (2017).
+    Publishers.                                                                                       A hybrid fruit fly algorithm for solving flexible job-shop scheduling to reduce
+Gómez Sánchez, M., Lalla-Ruiz, E., Fernández Gil, A., Castro, C., & Voß, S. (2023).                   manufacturing carbon footprint. Journal of Cleaner Production, 168, 668–678.
+    Resource-constrained multi-project scheduling problem: A survey. European Journal            Mascis, A., & Pacciarelli, D. (2002). Job-shop scheduling with blocking and no-wait
+    of Operational Research, 309(3), 958–976.                                                         constraints. European Journal of Operational Research, 143(3), 498–517.
+González, M. A., Vela, C. R., & Varela, R. (2015). Scatter search with path relinking for        Mastrolilli, M., & Gambardella, L. M. (2000). Effective neighbourhood functions for the
+    the flexible job shop scheduling problem. European Journal of Operational Research,               flexible job shop problem. Journal of Scheduling, 3(1), 3–20.
+    245(1), 35–45.                                                                               Meloni, C., Pranzo, M., & Samà, M. (2022). Evaluation of VaR and CVaR for the
+Grigoriev, A., Holthuijsen, M., & van de Klundert, J. (2005). Basic scheduling problems               makespan in interval valued blocking job shops. International Journal of Production
+    with raw material constraints. Naval Research Logistics, 52(6), 527–535.                          Economics, 247.
+
+
+                                                                                            16
+G.A. Kasapidis et al.                                                                                                              European Journal of Operational Research xxx (xxxx) xxx
+
+
+Mogali, J. K., Barbulescu, L., & Smith, S. F. (2021). Efficient primal heuristic updates          Sha, Y., Zhang, J., & Cao, H. (2021). Multistage stochastic programming approach
+     for the blocking job shop problem. European Journal of Operational Research, 295(1),             for joint optimization of job scheduling and material ordering under endogenous
+     82–101.                                                                                          uncertainties. European Journal of Operational Research, 290(3), 886–900.
+Mogali, J. K., Kinable, J., Smith, S. F., & Rubinstein, Z. B. (2021). Scheduling for              Shaw, P. (1998). Using constraint programming and local search methods to solve
+     multi-robot routing with blocking and enabling constraints. Journal of Scheduling,               vehicle routing problems. In M. Maher, & J.-F. Puget (Eds.), Principles and practice
+     24, 291–318.                                                                                     of constraint programming — CP98 (pp. 417–431). Berlin, Heidelberg: Springer Berlin
+Mokhtari, H., & Dadgar, M. (2015). Scheduling optimization of a stochastic flexible                   Heidelberg.
+     job-shop system with time-varying machine failure rate. Computers & Operations               Słowiński, R. (1980). Two approaches to problems of resource allocation among project
+     Research, 61, 31–45.                                                                             activities – a comparative study. Journal of the Operational Research Society, 31(8),
+Muritiba, A. E. F., Rodrigues, C. D., & da Costa, F. A. (2018). A path-relinking algorithm            711–723.
+     for the multi-mode resource-constrained project scheduling problem. Computers &              Słowiński, R. (1981). Multiobjective network scheduling with efficient use of renewable
+     Operations Research, 92, 145–154.                                                                and nonrenewable resources. European Journal of Operational Research, 7, 265–273.
+Nguyen, S., Thiruvady, D., Ernst, A. T., & Alahakoon, D. (2019). A hybrid differ-                 Soares, L. C. R., & Carvalho, M. A. M. (2020). Biased random-key genetic algorithm for
+     ential evolution algorithm with column generation for resource constrained job                   scheduling identical parallel machines with tooling constraints. European Journal of
+     scheduling. Computers & Operations Research, 109, 273–287.                                       Operational Research, 285(3), 955–964.
+Novas, J. M. (2019). Production scheduling and lot streaming at flexible job-shops                Song, R., Lau, H. C., Luo, X., & Zhao, L. (2022). Coordinated delivery to shopping
+     environments using constraint programming. Computers & Industrial Engineering,                   malls with limited docking capacity. Transportation Science, 56(2), 501–527.
+     136(October 2018), 252–264.                                                                  Trabelsi, W., Sauvey, C., & Sauer, N. (2012). Heuristics and metaheuristics for
+Novas, J. M., & Henning, G. P. (2014). Integrated scheduling of resource-constrained                  mixed blocking constraints flowshop scheduling problems. Computers & Operations
+     flexible manufacturing systems using constraint programming. Expert Systems with                 Research, 39(11), 2520–2527.
+     Applications, 41(5), 2286–2299.                                                              Trojet, M., H’Mida, F., & Lopez, P. (2011). Project scheduling under resource con-
+Oddi, A., Rasconi, R., Cesta, A., & Smith, S. F. (2012). Iterative improvement algorithms             straints: Application of the cumulative global constraint in a decision support
+     for the blocking job shop. ICAPS 2012 - Proceedings of the 22nd International                    framework. Computers & Industrial Engineering, 61(2), 357–363.
+     Conference on Automated Planning and Scheduling, 199–206.                                    Van Peteghem, V., & Vanhoucke, M. (2014). An experimental investigation of meta-
+Palpant, M., Artigues, C., & Michelon, P. (2004). LSSPER: Solving the resource-                       heuristics for the multi-mode resource-constrained project scheduling problem on
+     constrained project scheduling problem with large neighbourhood search. Anal.                    new dataset instances. European Journal of Operational Research, 235(1), 62–72.
+     Oper. Res., 131(1), 237–257.                                                                 Waldherr, S., & Knust, S. (2017). Decomposition algorithms for synchronous flow shop
+Patterson, J., Talbot, F., Słowiński, R., & Węglarz, J. (1990). Computational experience              problems with additional resources and setup times. European Journal of Operational
+     with a backtracking algorithm for solving a general class of precedence and                      Research, 259(3), 847–863.
+     resource-constrained scheduling problems. European Journal of Operational Research,          Węglarz, J. (1981). Project scheduling with continuously-divisible, doubly constrained
+     49, 68–79.                                                                                       resources. Management Sci., 27(9), 1040–1053.
+Pisinger, D., & Ropke, S. (2007). A general heuristic for vehicle routing problems.               Wong, T. C., Chan, F. T., & Chan, L. Y. (2009). A resource-constrained assembly
+     Computers & Operations Research, 34(8), 2403–2435.                                               job shop scheduling problem with lot streaming technique. Computers & Industrial
+Pranzo, M., & Pacciarelli, D. (2016). An iterated greedy metaheuristic for the blocking               Engineering, 57(3), 983–995.
+     job shop scheduling problem. J. Heuristics, 22(4), 587–611.                                  Yaurima, V., Burtseva, L., & Tchernykh, A. (2009). Hybrid flowshop with unrelated
+Prata, B. A., Abreu, L. R., & Nagano, M. S. (2024). Applications of constraint pro-                   machines, sequence-dependent setup time, availability constraints and limited
+     gramming in production scheduling problems: A descriptive bibliometric analysis.                 buffers. Computers & Industrial Engineering, 56(4), 1452–1463.
+     Results in Control and Optimization, 14, Article 100350.                                     Yuan, Y., Xu, H., & Yang, J. (2013). A hybrid harmony search algorithm for the flexible
+Rifai, A. P., Nguyen, H. T., & Dawal, S. Z. M. (2016). Multi-objective adaptive large                 job shop scheduling problem. Applied Soft Computing, 13(7), 3259–3272.
+     neighborhood search for distributed reentrant permutation flow shop scheduling.              Yunusoglu, P., & Yildiz, S. T. (2023). Solving the flexible job shop scheduling and
+     Applied Soft Computing, 40, 42–57.                                                               lot streaming problem with setup and transport resource constraints. International
+Ropke, S., & Pisinger, D. (2006). An adaptive large neighborhood search heuristic for                 Journal of Systems Science, 10.
+     the pickup and delivery problem with time windows. Transportation Science, 40(4),            Zeballos, L. J., Quiroga, O. D., & Henning, G. P. (2010). A constraint programming
+     455–472.                                                                                         model for the scheduling of flexible manufacturing systems with machine and tool
+Sacramento, D., Solnon, C., & Pisinger, D. (2020). Constraint programming and local                   limitations. Engineering Applications of Artificial Intelligence, 23(2), 229–248.
+     search heuristic: A matheuristic approach for routing and scheduling feeder vessels          Zhang, S., Du, H., Borucki, S., Jin, S., Hou, T., & Li, Z. (2021). Dual resource
+     in multi-terminal ports. Oper. Res. Forum, 1.                                                    constrained flexible job shop scheduling based on improved quantum genetic
+Schrimpf, G., Schneider, J., Stamm-Wilbrandt, H., & Dueck, G. (2000). Record breaking                 algorithm. Machines, 9(6).
+     optimization results using the ruin and recreate principle. Journal of Computational
+     Physics, 159(2), 139–171.
+
+
+
+
+                                                                                             17
+
