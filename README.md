@@ -44,6 +44,7 @@ The protocol, the hardware and the numbers are described in **[EXPERIMENTS.md](E
 | `instances/` | the authors' instances (mirror, with `SHA256SUMS`) and the ten calibration instances | [instances/README.md](instances/README.md) |
 | `results/` | every reported run, plus `TABLES.md` generated from them | [results/README.md](results/README.md) |
 | `papers/` | the authors' article and the related work | [papers/README.md](papers/README.md) |
+| `instances/heldout/`, `instances/scaled10/` | fifteen independent combined-resource instances (hashes and budgets committed before any run) and three ×10-scaled benchmark instances, for the pre-registered revision campaign | [instances/heldout/README.md](instances/heldout/README.md), [experimentos/PREREGISTRATION.md](experimentos/PREREGISTRATION.md) |
 | `paper/ref/` | plain-text extraction of the authors' article, read by the campaign scripts to cross-check Table 10 | [paper/ref/README.md](paper/ref/README.md) |
 
 Names in the manuscript versus names in the code and in the result folders:

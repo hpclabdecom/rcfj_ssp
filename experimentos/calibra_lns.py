@@ -85,7 +85,11 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     ap.add_argument("--saida", default=str(OUT))
     ap.add_argument("--resumo", action="store_true")
     ap.add_argument("--qualquer-maquina", action="store_true")
+    ap.add_argument("--viz", nargs="*", default=None,
+                    help="neighbourhoods of the runner (default: the four of the development runner; 'janela' = time window only)")
     a = ap.parse_args(argv)
+    if a.viz:
+        lns.P["VIZ"] = tuple(a.viz)
     pasta = Path(a.saida)
     if a.resumo:
         resumo(pasta)

@@ -31,6 +31,21 @@ Windows entry points, all run from the repository root:
 They detect an AMD CPU and add `--qualquer-maquina`; on the i7 they run without it. Each one runs a campaign, then
 the solver-free checker on the output folder.
 
+## Revision campaign (pre-registered)
+
+`PREREGISTRATION.md` fixes the arms, hypotheses and decision rules of the campaign that answers the experimental
+questions of the review; it was committed before any of its runs. The scripts it uses:
+
+| script | what it does |
+|---|---|
+| `campanha_revisao.py` / `CAMPANHA_REVISAO.bat` | the single resumable campaign of the machine it runs on (i7, Ryzen or Xeon, detected from the CPU name); `--listar` prints the arms and hours; relaunching resumes; on the Xeon, 8-thread arms run two at a time on disjoint core sets and 16/32-thread arms alone |
+| `rcfjssp_ptw_controls.py` | PT-W controls derived from the frozen `rcfjssp_ptw.py` (imported, not edited): `--braco U` uniform repair kernel with exchanges, `F` fixed ladder, `C` initialised energy cache, `D` instrumented search (build/solve/lock times, ρ, exchange-cache state), `S` sensitivity (`--tmin/--tmax/--delta-max/--deriva/--sub-hot`); records the SHA-256 of the frozen files and its own |
+| `rcfjssp_heldout.py` | TW-LNS, PT-W and the monolithic native-reservoir CP-SAT on an instance folder outside the benchmark (`instances/heldout`, `instances/scaled10`), with that folder's `budgets.json`; the frozen scripts are imported unchanged |
+| `gera_instancias.py` | generator of the held-out set (`instances/heldout/README.md`) and of the ×10 instances (`--escala10`) |
+| `memcheck.py` | peak system memory during a short PT-W 16×2 run; gates the 32-thread arms on the Xeon |
+
+`rcfjssp_audit.py --instancias <folder>` checks results on instances outside the benchmark tree.
+
 ## Common conventions
 
 * **Budget.** Experiment-4 heuristics use, per instance, the ALNS-CP time of the authors' Table 10 (`T_ALNS` in

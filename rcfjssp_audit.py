@@ -192,7 +192,10 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--results", default=str(CAMPAIGN))
     parser.add_argument("--verbose", action="store_true")
+    parser.add_argument("--instancias", default=None,
+                        help="folder holding <instance>.fjs when the results are not on the upstream benchmark")
     args = parser.parse_args(argv)
+    inst_dir = Path(args.instancias) if args.instancias else None
 
     files = sorted(Path(args.results).glob("*.json"))
     if not files:
@@ -218,7 +221,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         if spec is None:
             failures.append(f"{path.name}: configuracao desconhecida {key}")
             continue
-        inst = parse(UP / spec["folder"] / f"{row['instance']}.fjs")
+        inst = parse((inst_dir or (UP / spec["folder"])) / f"{row['instance']}.fjs")
 
         for problem in check_parse(inst):
             failures.append(f"{path.name}: {problem}")
