@@ -43,8 +43,7 @@ def descreve() -> dict:
 def exige_i7(qualquer_maquina: bool = False) -> None:
     if e_a_do_paper():
         return
-    msg = (f"Esta maquina e '{nome_cpu()}', nao o {ALVO}. Os resultados do paper "
-           f"so podem vir do {ALVO}.")
+    msg = (f"Esta maquina e '{nome_cpu()}', nao a plataforma de referencia {ALVO}.")
     if qualquer_maquina:
         print(f"AVISO: {msg} Seguindo por --qualquer-maquina; o resultado sai "
               f"marcado maquina_do_paper=false.", flush=True)

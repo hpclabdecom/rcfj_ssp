@@ -4,8 +4,7 @@ Replication package of
 
 > Lima, J.C., Vieira, M.P.R., Alem, B.C., Soares, L.C.R., Almeida, A.L.B., Carvalho, M.A.M.
 > *Strengthening the baseline before a new optimization method: a large-language-model-assisted
-> algorithm-engineering case study in multi-resource flexible job shops.* Manuscript submitted to the
-> European Journal of Operational Research, 2026.
+> algorithm-engineering case study in multi-resource flexible job shops.* 2026.
 
 The problem is the **resource-constrained flexible job shop scheduling problem (RCFJ-SSP)** of Kasapidis,
 Paraskevopoulos, Mourtos and Repoussis, *European Journal of Operational Research* 320(3), 479–495, 2025
@@ -21,10 +20,14 @@ What is here:
   that keeps the authors' time-window operator (§4.1.1) and CP reconstruction, with a native reservoir encoding;
 * **PT-W** (`experimentos/rcfjssp_ptw.py`; folders `ptw_*`): parallel tempering with time-window repair, the
   parallel-tempering architecture of the group over the same neighbourhood;
-* the calibration grid, the replica-layout screen, the exact-solver and monolithic CP-SAT baselines;
+* the calibration grids, the replica-layout screens, the exact-solver and monolithic CP-SAT baselines;
+* the pre-registered controls of PT-W (same geometry, no exchanges, uniform kernel, fixed ladder, initialised cache,
+  α = 0, instrumented run), fifteen independent instances with their generator, ×10-scaled instances and the
+  sensitivity arms of the thermal controls;
 * the **solver-free checker** (`rcfjssp_audit.py`, checks A–E) that re-verifies every reported schedule;
-* **every result file** of the reported campaigns on both platforms (Intel Core i7-2600 and AMD Ryzen 7 5700U):
-  JSON with the full schedule, protocol manifests with hashes, solver logs, hardware descriptions;
+* **every result file** of the reported campaigns on three platforms (Intel Core i7-2600, AMD Ryzen 7 5700U and
+  Intel Xeon E5-2696 v4): JSON with the full schedule, protocol manifests with hashes, solver logs, hardware
+  descriptions;
 * the generated tables (`results/TABLES.md`), the benchmark instances with their SHA-256 (`instances/SHA256SUMS`),
   the ten calibration instances, the authors' article (CC BY 4.0) and the related-work list.
 
@@ -40,23 +43,26 @@ The protocol, the hardware and the numbers are described in **[EXPERIMENTS.md](E
 | `rcfjssp_campaign.py` | runs the four models over the whole benchmark and reports agreement with the published tables | |
 | `rcfjssp_audit.py` | solver-free checker (A–E) over any results folder | |
 | `preflight.py` | end-to-end check of interpreter, solver, instances and models | |
-| `experimentos/` | campaign scripts, TW-LNS, PT-W, calibration, analysis, Windows `.bat` entry points | [experimentos/README.md](experimentos/README.md) |
+| `experimentos/` | campaign scripts, TW-LNS, PT-W, controls, calibration, analysis, Windows `.bat` entry points; `PREREGISTRATION.md` | [experimentos/README.md](experimentos/README.md) |
 | `instances/` | the authors' instances (mirror, with `SHA256SUMS`) and the ten calibration instances | [instances/README.md](instances/README.md) |
 | `results/` | every reported run, plus `TABLES.md` generated from them | [results/README.md](results/README.md) |
 | `papers/` | the authors' article and the related work | [papers/README.md](papers/README.md) |
-| `instances/heldout/`, `instances/scaled10/` | fifteen independent combined-resource instances (hashes and budgets committed before any run) and three ×10-scaled benchmark instances, for the pre-registered revision campaign | [instances/heldout/README.md](instances/heldout/README.md), [experimentos/PREREGISTRATION.md](experimentos/PREREGISTRATION.md) |
+| `instances/heldout/`, `instances/scaled10/` | fifteen independent combined-resource instances (hashes and budgets committed before any run) and three ×10-scaled benchmark instances | [instances/heldout/README.md](instances/heldout/README.md), [experimentos/PREREGISTRATION.md](experimentos/PREREGISTRATION.md) |
 | `paper/ref/` | plain-text extraction of the authors' article, read by the campaign scripts to cross-check Table 10 | [paper/ref/README.md](paper/ref/README.md) |
 
-Names in the manuscript versus names in the code and in the result folders:
+Method names versus names in the code and in the result folders:
 
-| in the manuscript | in the code / results |
+| name | in the code / results |
 |---|---|
-| TW-LNS | `rcfjssp_lns.py --viz janela`; folders `heur_lns_janela` (i7), `heur_lns_janela_4x2`, `heur_lns_janela_8x2` (Ryzen); code name `X8b` |
-| PT-W | `rcfjssp_ptw.py`; folders `ptw_8x1`, `ptw_4x2`, `ptw_16x1`; code name `PTW` / `X12` |
-| replica-layout screen | `screen_ptw_8x1`, `screen_ptw_4x2` |
-| calibration grid (θ, ρ₀) | `calibra_lns.py`; folder `calibracao`; code name `X9` |
-| native-reservoir CP-SAT at T_i | `x10_reservatorio.py`; folders `reservatorio_w8_TALNS`, `reservatorio_w16_TALNS`; code name `X10` |
-| validated CP-SAT model, 1800 s | `rcfjssp_final.py --braco relato`; folders `relato_w8_1800`, `relato_w16_1800`; code name `X1` |
+| TW-LNS | `rcfjssp_lns.py --viz janela`; folders `heur_lns_janela` (i7), `heur_lns_janela_4x2`, `_8x2`, `_16x2`; code name `X8b` |
+| TW-LNS 8×1 (same geometry as PT-W 8×1) | `rcfjssp_lns.py --viz janela --walkers 8 --fios 1`; folder `lns_8x1` |
+| PT-W | `rcfjssp_ptw.py`; folders `ptw_8x1`, `ptw_4x2`, `ptw_16x1`, `ptw_16x2`; code name `PTW` / `X12` |
+| PT-W controls PE, U, F, C, PD, D | `rcfjssp_ptw.py --sem-troca` / `--alpha-e 0` and `rcfjssp_ptw_controls.py --braco U/F/C/D`; folders `ptw_8x1_PE_semtroca`, `ptw_8x1_U_nucleo_uniforme`, `ptw_8x1_F_escada_fixa`, `ptw_8x1_C_cache_inicial`, `ptw_8x1_PD_alpha0`, `ptw_8x1_D_instrumentado` |
+| independent instances, ×10 instances, sensitivity | `rcfjssp_heldout.py`, `rcfjssp_ptw_controls.py --braco S`; folders `heldout_*`, `escala10_*`, `sens_*` |
+| replica-layout screen | `screen_ptw_8x1`, `screen_ptw_4x2` (i7, Ryzen); `screen_ptw_16x2`, `screen_ptw_32x1` (Xeon) |
+| calibration grid (θ, ρ₀) | `calibra_lns.py`; folder `final/calibracao` (development runner) and `i7/calibracao_janela` (window-only rerun); code name `X9` |
+| native-reservoir CP-SAT at T_i | `x10_reservatorio.py`; folders `reservatorio_w8_TALNS`, `_w16_TALNS`, `_w32_TALNS`; code name `X10` |
+| validated CP-SAT model, 1800 s | `rcfjssp_final.py --braco relato`; folders `relato_w8_1800`, `_w16_1800`, `_w32_1800`; code name `X1` |
 | CP Optimizer 22.2, literal model, 1800 s | `rcfjssp_cpo.py --exp 4`; folders `cpo_exp4`, `cpo_exp4_w8`, `cpo_exp4_w16`; code name `X6b` |
 | validation of Tables 7–9 | `rcfjssp_valida_i7.py` (CP-SAT, folder `validacao`, `X4`) and `rcfjssp_cpo.py --exp 1/2/3` (folder `cpo_exp123`, `X6a`) |
 
@@ -78,9 +84,10 @@ Verify the reported schedules without running any solver (seconds per folder):
 python rcfjssp_audit.py --results results/final/heur_lns_janela     # TW-LNS, i7, 100 runs
 python rcfjssp_audit.py --results results/i7/ptw_8x1               # PT-W, i7, 100 runs
 python rcfjssp_audit.py --results results/ryzen/ptw_8x1
+python rcfjssp_audit.py --results results/xeon/heldout_ptw_8x1 --instancias instances/heldout
 ```
 
-Regenerate the tables of `EXPERIMENTS.md` and of the manuscript from the result files (no solver, about a minute):
+Regenerate `results/TABLES.md` from the result files (no solver; the exact tests take a few minutes):
 
 ```bash
 python experimentos/analise_campanhas.py > results/TABLES.md
@@ -104,14 +111,15 @@ python rcfjssp_audit.py --results results/_local/ptw
 
 Full campaigns are launched by the `.bat` files in `experimentos/` (Windows) or by the equivalent Python commands
 listed in [experimentos/README.md](experimentos/README.md). Budgets are the per-instance ALNS-CP times of the
-authors' Table 10 (179.86–800.39 s per run), so a full 10-instance × 10-seed campaign takes about 12.6 hours.
+authors' Table 10 (179.86–800.39 s per run), so a full 10-instance × 10-seed campaign takes about 12.6 hours; the
+controls, held-out and scalability arms of one machine (`experimentos/CAMPANHA_CONTROLES.bat`) take 200–275 hours.
 
 ### The machine guard
 
 The campaign scripts record the CPU in every result and refuse to run on a CPU other than the i7-2600 unless
 `--qualquer-maquina` ("any machine") is passed (`experimentos/maquina.py`); the result is then written with
-`maquina_do_paper: false`, which only records that the CPU is not the i7-2600. The `.bat` files detect AMD CPUs and
-pass the flag automatically; all Ryzen folders carry it.
+`maquina_do_paper: false`, which only records that the CPU is not the i7-2600. The `.bat` files detect any other CPU
+and pass the flag automatically; all Ryzen and Xeon folders carry it.
 
 ### CP Optimizer (optional)
 
@@ -188,7 +196,7 @@ checkout. `instances/SHA256SUMS` lists the SHA-256 of every instance file (`sha2
 
 ## Citing
 
-Cite the benchmark paper of Kasapidis et al. (2025) for the problem and the instances, and the manuscript above for
+Cite the benchmark paper of Kasapidis et al. (2025) for the problem and the instances, and the article above for
 TW-LNS, PT-W and the results in this repository.
 
 ## License

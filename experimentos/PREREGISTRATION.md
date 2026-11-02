@@ -1,17 +1,21 @@
-# Pre-registered revision campaign (written before any run; 21 October 2026)
+# Pre-registered campaign of controls, held-out and scalability arms (written before any run; 21 October 2026)
+
+*Context sentences and file names in this document were edited after the campaign for neutral wording; the arms,
+hypotheses, decision rules, budgets and statistics are unchanged since the commit of 21 October 2026 that preceded
+the first run.*
 
 This document fixes, before execution, the arms, hypotheses, decision rules and analysis of the campaign that
-answers the experimental questions raised in the review of the manuscript. It is committed together with the
-scripts and the instance files it refers to; the commit hash is the time stamp. Nothing in TW-LNS or PT-W changes:
+isolates the mechanisms of PT-W, evaluates both methods on independent instances and studies scalability. It is
+committed together with the scripts and the instance files it refers to; the commit hash is the time stamp. Nothing in TW-LNS or PT-W changes:
 the frozen files keep their recorded SHA-256 (`README.md`, "Provenance"), and every control is a derived script
 (`rcfjssp_ptw_controls.py`, `rcfjssp_heldout.py`) that imports them and records both hashes in its manifest.
 
 ## 1. Platforms, execution and common rules
 
 * Platforms: Intel Core i7-2600 (8 threads), AMD Ryzen 7 5700U (16 threads), Intel Xeon E5-2696 v4 (22 cores,
-  44 threads, 16 GB). The i7 and the Ryzen remain the platforms of the manuscript; the Xeon is a third platform and
+  44 threads, 16 GB). The i7 and the Ryzen are the reference platforms of the main campaign; the Xeon is a third platform and
   the only one where layouts above 16 threads are run. Results of different machines are never pooled.
-* One resumable campaign per machine: `python experimentos/campanha_revisao.py` (`CAMPANHA_REVISAO.bat`). Every arm
+* One resumable campaign per machine: `python experimentos/campanha_controles.py` (`CAMPANHA_CONTROLES.bat`). Every arm
   writes one JSON per (instance, seed) with a protocol hash; an interrupted campaign is resumed by relaunching the
   same command, which skips finished runs. On the Xeon, 8-thread arms run two at a time on disjoint sets of eight
   physical cores (affinity masks `0xFFFF` and `0xFFFF0000`); every 8-thread arm of the Xeon, including its own
@@ -61,8 +65,7 @@ PT layer (energy, heterogeneous kernels, Metropolis acceptance, exchanges, ladde
 
 Each arm is compared with PT-W 8×1 of the same machine (two-sided; direction not pre-specified). A mechanism is
 reported as contributing if the arm without it is worse with global p < 0.05 and the CI of the effect excludes zero;
-as not detectable under the rule of Section 2; otherwise inconclusive. The three-instance, five-seed arms of the
-first submission are superseded by these and are not reported.
+as not detectable under the rule of Section 2; otherwise inconclusive. The earlier three-instance, five-seed checks of the same mechanisms are superseded by these arms.
 
 ### C. Scale and robustness of the thermal controls (three instances `lcbrtu_3`, `_5`, `_8`; seeds 1–5; i7 and Ryzen)
 Variants of PT-W 8×1: temperature endpoints halved (0.075–0.75) and doubled (0.3–3.0); relaxation and drift
@@ -114,7 +117,7 @@ among the two best by mean RPD or its mean RPD is within one percentage point of
 the window-only grid is reported and the consequence discussed (no rerun of the main campaigns with other values).
 
 ## 4. What is reported without new runs
-Paired bootstrap CIs and the p-value convention above for the four matched comparisons of the manuscript; residual
+Paired bootstrap CIs and the p-value convention above for the four matched comparisons of the main campaign; residual
 gaps to the best known bounds; per-slot activity and sources of global improvements from the existing PT-W JSON
 files; time–quality trajectories of TW-LNS and PT-W from `trajetoria`; a direct-effect figure; a table linking each
 contextual baseline to its encoding, budget convention, replication and machine.
@@ -122,5 +125,5 @@ contextual baseline to its encoding, budget convention, replication and machine.
 ## 5. Order of execution and estimated machine time
 i7: A' → B (PE, U, F, C, PD) → G → D → C → H (≈ 230 h). Ryzen: A' → B → G → D → C (≈ 205 h). Xeon: memory check →
 E (16 threads) → E (32 threads, if cleared) → 32-thread baselines → then, in pairs: references, A', B (PE, U, C),
-G, D, 8-thread baselines (≈ 275 machine-hours, ≈ 170 h wall). `campanha_revisao.py --listar` prints the plan of the
+G, D, 8-thread baselines (≈ 275 machine-hours, ≈ 170 h wall). `campanha_controles.py --listar` prints the plan of the
 machine it runs on.

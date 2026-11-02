@@ -10,13 +10,13 @@ root and this folder in `sys.path`, imports the core modules, and writes one JSO
 | `preflight_maquina.py` | checks CPU, RAM, Python, OR-Tools, docplex and the `cpoptimizer` executable; solves one Experiment-4 instance for a few seconds with each solver | `results/preflight_<host>.json` |
 | `rcfjssp_valida_i7.py` | Tables 7–9 (110 cells) with the four CP-SAT models, 300 s per cell (`--saida`, default `results/_local/validacao`); `python rcfjssp_campaign.py --report` prints the agreement of `results/final/validacao` | `results/final/validacao` |
 | `rcfjssp_cpo.py` | literal interval-variable model in CP Optimizer: `--exp 1/2/3 --check` for Tables 7–9, `--exp 4 --limit 1800` for Table 10 | `results/final/cpo_exp123`, `cpo_exp4`; `results/ryzen/cpo_exp4_w8`, `cpo_exp4_w16` |
-| `rcfjssp_final.py` | exact CP-SAT on the validated full model of Experiment 4, 1800 s per run, with solver log; arm `relato` = from scratch, seeds 1–10 | `results/final/relato_w8_1800`; `results/ryzen/relato_w8_1800`, `relato_w16_1800` |
+| `rcfjssp_final.py` | exact CP-SAT on the validated full model of Experiment 4, 1800 s per run, with solver log; arm `relato` = from scratch | `results/final/relato_w8_1800` (seeds 1–10); `relato_w8_1800`, `relato_w16_1800` (Ryzen) and `relato_w8_1800`, `relato_w32_1800` (Xeon), one run |
 | `instancias_calibracao.py`, `calibra_lns.py` | parser for the FJSSP/JSSP calibration instances; 4 × 4 grid of (θ, ρ₀) × 10 instances × 10 runs × 60 s; writes the chosen pair to `escolha.json` | `results/final/calibracao/{runs,escolha.json}` |
 | `modelo_reservatorio.py` | the full model with Eqs. 12–13 as native CP-SAT reservoir constraints; used by TW-LNS, PT-W and `x10_reservatorio.py` | — |
-| `rcfjssp_lns.py` | **TW-LNS** (`--viz janela`) | `results/final/heur_lns_janela`; `results/ryzen/heur_lns_janela_4x2`, `heur_lns_janela_8x2` |
-| `rcfjssp_ptw.py` | **PT-W** | `results/i7/ptw_8x1`, `ptw_4x2`; `results/ryzen/ptw_8x1`, `ptw_16x1`; the screen folders `screen_ptw_*` |
-| `x10_reservatorio.py` | CP-SAT on the whole model with the reservoir encoding, at the per-instance ALNS-CP budget, 10 seeds (native-reservoir baseline) | `results/final/reservatorio_w8_TALNS`; `results/ryzen/reservatorio_w8_TALNS`, `reservatorio_w16_TALNS` |
-| `analise_campanhas.py` | reads `results/` (no solver) and prints, in Markdown, the platform tables, the four matched PT-W × TW-LNS comparisons with exact Mann–Whitney p-values, Holm correction and stratified permutation tests, the exploratory cross-platform comparison, the contextual baselines and the replica-layout screen | stdout (`results/TABLES.md`) |
+| `rcfjssp_lns.py` | **TW-LNS** (`--viz janela`) | `results/final/heur_lns_janela`; `heur_lns_janela_4x2`, `heur_lns_janela_8x2` (Ryzen, Xeon); `heur_lns_janela_16x2` (Xeon) |
+| `rcfjssp_ptw.py` | **PT-W** | `ptw_8x1` (all machines), `ptw_4x2` (i7), `ptw_16x1` (Ryzen, Xeon), `ptw_16x2` (Xeon); the screen folders `screen_ptw_*` |
+| `x10_reservatorio.py` | CP-SAT on the whole model with the reservoir encoding, at the per-instance ALNS-CP budget, 10 seeds (native-reservoir baseline) | `reservatorio_w8_TALNS` (all machines), `reservatorio_w16_TALNS` (Ryzen), `reservatorio_w32_TALNS` (Xeon) |
+| `analise_campanhas.py` | reads `results/` (no solver) and prints, in Markdown: the platform tables; the matched PT-W × TW-LNS comparisons at 8, 16 and 32 threads; the same-geometry and mechanism controls; the held-out, ×10 and sensitivity results; the window-only calibration grid; search diagnostics and the instrumented time shares; time–quality checkpoints; best values and bounds; the contextual baselines; the layout screens. Statistics: exact Mann–Whitney per instance with Holm, stratified permutation test (p = (c + 1)/(N + 1)) and paired bootstrap confidence intervals | stdout (`results/TABLES.md`, a few minutes) |
 
 Windows entry points, all run from the repository root:
 
@@ -28,21 +28,25 @@ Windows entry points, all run from the repository root:
 | `SCREEN_PTW.bat B|C` | the replica-layout screen: `B` = 8×1, `C` = 4×2, on `lcbrtu_3`, `lcbrtu_5`, `lcbrtu_8`, seeds 1–3 |
 | `TESTA_CPO.bat` | CP Optimizer licence check through `preflight_maquina.py` |
 
-They detect an AMD CPU and add `--qualquer-maquina`; on the i7 they run without it. Each one runs a campaign, then
+They detect a CPU other than the i7-2600 and add `--qualquer-maquina`; on the i7 they run without it. Each one runs a campaign, then
 the solver-free checker on the output folder.
 
-## Revision campaign (pre-registered)
+## Controls, independent instances and scalability (pre-registered campaign)
 
-`PREREGISTRATION.md` fixes the arms, hypotheses and decision rules of the campaign that answers the experimental
-questions of the review; it was committed before any of its runs. The scripts it uses:
+`PREREGISTRATION.md` fixes the arms, hypotheses, decision rules and statistics of the campaign that isolates the
+mechanisms of PT-W, evaluates both methods on independent instances and studies scalability; it was committed
+before any of its runs. The scripts it uses:
 
-| script | what it does |
-|---|---|
-| `campanha_revisao.py` / `CAMPANHA_REVISAO.bat` | the single resumable campaign of the machine it runs on (i7, Ryzen or Xeon, detected from the CPU name); `--listar` prints the arms and hours; relaunching resumes; on the Xeon, 8-thread arms run two at a time on disjoint core sets and 16/32-thread arms alone |
-| `rcfjssp_ptw_controls.py` | PT-W controls derived from the frozen `rcfjssp_ptw.py` (imported, not edited): `--braco U` uniform repair kernel with exchanges, `F` fixed ladder, `C` initialised energy cache, `D` instrumented search (build/solve/lock times, ρ, exchange-cache state), `S` sensitivity (`--tmin/--tmax/--delta-max/--deriva/--sub-hot`); records the SHA-256 of the frozen files and its own |
-| `rcfjssp_heldout.py` | TW-LNS, PT-W and the monolithic native-reservoir CP-SAT on an instance folder outside the benchmark (`instances/heldout`, `instances/scaled10`), with that folder's `budgets.json`; the frozen scripts are imported unchanged |
-| `gera_instancias.py` | generator of the held-out set (`instances/heldout/README.md`) and of the ×10 instances (`--escala10`) |
-| `memcheck.py` | peak system memory during a short PT-W 16×2 run; gates the 32-thread arms on the Xeon |
+| script | what it does | output folders |
+|---|---|---|
+| `campanha_controles.py` / `CAMPANHA_CONTROLES.bat` | the single resumable campaign of the machine it runs on (i7, Ryzen or Xeon, detected from the CPU name); `--listar` prints the arms and hours; relaunching resumes; on the Xeon, 8-thread arms run two at a time on disjoint core sets (`--pares`, `--mascaras`) and 16/32-thread arms alone; the checker runs after every arm | `results/<machine>/...` |
+| `rcfjssp_ptw_controls.py` | PT-W controls derived from the frozen `rcfjssp_ptw.py` (imported, not edited): `--braco U` uniform repair kernel with exchanges, `F` fixed ladder, `C` initialised energy cache, `D` instrumented search (build/solve/lock times per move, window size, exchange-cache state per attempt), `S` sensitivity (`--tmin/--tmax/--delta-max/--deriva/--sub-hot`); the manifest records the SHA-256 of the frozen files and of the script | `ptw_8x1_{U,F,C,D}_*`, `sens_*` |
+| `rcfjssp_ptw.py --sem-troca`, `--alpha-e 0` | the controls PE (no exchanges) and PD (α = 0) are flags of the frozen script | `ptw_8x1_PE_semtroca`, `ptw_8x1_PD_alpha0` |
+| `rcfjssp_lns.py --viz janela --walkers 8 --fios 1` | TW-LNS with the process geometry of PT-W 8×1 | `lns_8x1` |
+| `rcfjssp_heldout.py` | TW-LNS (`--metodo lns`), PT-W (`ptw`) and CP-SAT on the whole native-reservoir model (`mono`) on an instance folder outside the benchmark (`--instancias-dir instances/heldout` or `instances/scaled10`), with that folder's `budgets.json`; the frozen scripts are imported unchanged | `heldout_*`, `escala10_*` |
+| `gera_instancias.py` | generator of the independent instances (`instances/heldout/README.md`, `GENERATION.json`) and of the ×10 instances (`--escala10`) | `instances/heldout`, `instances/scaled10` |
+| `calibra_lns.py --viz janela` | the calibration grid rerun with the time-window-only search | `results/i7/calibracao_janela` |
+| `memcheck.py` | peak system memory during a short PT-W 16×2 run; gates the 32-thread arms on the Xeon | `results/xeon/memcheck.json` |
 
 `rcfjssp_audit.py --instancias <folder>` checks results on instances outside the benchmark tree.
 
@@ -101,8 +105,8 @@ min{1, exp((1/T_i − 1/T_j)(E_i − E_j))}, reading the neighbour's last publis
 60 s the parent process rescales the logarithmic gaps of the ladder by exp{0.5(a_p − 0.23)/0.23}, where a_p is the
 exchange acceptance rate of pair p over the period (only when every pair has at least five attempts), clips them to
 [0.02, 3] and renormalises so that the endpoints stay at 0.15 and 1.5; counters are reset at every check. Only the
-replica in slot 0 adopts the global incumbent. Layouts run: `8 × 1` and `4 × 2` (i7), `8 × 1` and `16 × 1` (Ryzen).
-The constants are in the `ptw` block of every manifest.
+replica in slot 0 adopts the global incumbent. Layouts run: `8 × 1` and `4 × 2` (i7), `8 × 1` and `16 × 1` (Ryzen),
+`8 × 1`, `16 × 1` and `16 × 2` (Xeon). The constants are in the `ptw` block of every manifest.
 
 ## Reproducing a campaign elsewhere
 
