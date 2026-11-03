@@ -544,6 +544,25 @@ Arm `xeon/ptw_8x1` against control `xeon/ptw_8x1_C_cache_inicial`. Effect = medi
 Instances with a better / equal / worse median in the arm: **2 / 7 / 1**. Mean difference of medians **+0.05** (95 % CI [-0.50, +0.65]); mean difference of means **-0.16** (95 % CI [-0.69, +0.34]); stratified permutation p = 0.601 (p = (c + 1)/(N + 1), N = 20000).
 Mean of medians: arm 320.45 vs control 320.50. Sum of the best values: arm 3192 vs control 3186.
 
+#### Combined control F+PD (fixed ladder and α = 0 together), Ryzen, four open instances, ten seeds
+
+Run after the pre-registered campaign, with the same statistics, on the instances that are not solved to a proved optimum (`lcbrtu_0`, `_3`, `_5`, `_8`): exchanges, geometric ladder, Metropolis acceptance and slot-dependent kernels unchanged; the ladder is never adapted and the energy is the makespan.
+
+
+#### AMD Ryzen 7 5700U: PT-W 8×1 vs F+PD (fixed ladder, α = 0), four open instances
+
+Arm `ryzen/ptw_8x1` against control `ryzen/ptw_8x1_FPD_escada_fixa_alpha0`. Effect = median(control) − median(arm); positive = the arm is better. Exact Mann–Whitney per instance, Holm over the non-degenerate instances; stratified permutation test (two-sided); paired bootstrap 95 % CIs.
+
+| instance | arm best / median / mean | control best / median / mean | effect (median) | exact p | Holm p |
+|---|---|---|---:|---:|---:|
+| lcbrtu_0 | 336 / 337 / 338.2 (n=10) | 335 / 337 / 336.9 (n=10) | +0 | 0.462 | 0.511 |
+| lcbrtu_3 | 371 / 374.5 / 374.0 (n=10) | 372 / 375 / 376.0 (n=10) | +0.5 | 0.204 | 0.511 |
+| lcbrtu_5 | 341 / 343.5 / 343.7 (n=10) | 343 / 345.5 / 345.5 (n=10) | +2 | 0.038 | 0.153 |
+| lcbrtu_8 | 357 / 362.5 / 363.3 (n=10) | 359 / 360.5 / 361.1 (n=10) | -2 | 0.170 | 0.511 |
+
+Instances with a better / equal / worse median in the arm: **2 / 1 / 1**. Mean difference of medians **+0.12** (95 % CI [-1.50, +1.62]); mean difference of means **+0.08** (95 % CI [-0.98, +1.15]); stratified permutation p = 0.934 (p = (c + 1)/(N + 1), N = 20000).
+Mean of medians: arm 354.38 vs control 354.50. Sum of the best values: arm 1405 vs control 1409.
+
 ## 5. Independent instances (`instances/heldout`), ten seeds, budget 4 s × operations
 
 

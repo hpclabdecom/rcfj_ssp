@@ -234,6 +234,13 @@ def mechanisms():
         for code, folder, what in arms:
             compare(f"{PLAT[plat].split(' (')[0]}: PT-W 8×1 vs {code} ({what})", f"{plat}/{folder}", f"{plat}/ptw_8x1",
                     onesided=False)
+    print("\n#### Combined control F+PD (fixed ladder and α = 0 together), Ryzen, four open instances, ten seeds\n")
+    print("Run after the pre-registered campaign, with the same statistics, on the instances that are not solved to a "
+          "proved optimum (`lcbrtu_0`, `_3`, `_5`, `_8`): exchanges, geometric ladder, Metropolis acceptance and "
+          "slot-dependent kernels unchanged; the ladder is never adapted and the energy is the makespan.\n")
+    compare("AMD Ryzen 7 5700U: PT-W 8×1 vs F+PD (fixed ladder, α = 0), four open instances",
+            "ryzen/ptw_8x1_FPD_escada_fixa_alpha0", "ryzen/ptw_8x1", ["lcbrtu_0", "lcbrtu_3", "lcbrtu_5", "lcbrtu_8"],
+            onesided=False)
 
 
 def heldout():

@@ -62,6 +62,7 @@ T_i = the per-instance ALNS-CP time of Table 10 (179.86–800.39 s). Held-out bu
 | `ptw_8x1_F_escada_fixa` | the ladder is never adapted | i7, Ryzen |
 | `ptw_8x1_C_cache_inicial` | the exchange energy cache starts at E(s*) instead of 0 | i7, Ryzen, Xeon |
 | `ptw_8x1_PD_alpha0` | α = 0 (energy = makespan) | i7, Ryzen |
+| `ptw_8x1_FPD_escada_fixa_alpha0` | F and PD combined: the ladder is never adapted and α = 0; run after the pre-registered campaign on the four open instances (`lcbrtu_0`, `_3`, `_5`, `_8`), seeds 1–10 | Ryzen |
 | `ptw_8x1_D_instrumentado` | PT-W with per-move and per-exchange records (seeds 1–3) | i7, Ryzen, Xeon |
 
 ### Independent instances, scale and sensitivity

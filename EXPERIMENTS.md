@@ -25,7 +25,7 @@ them ran.
   methods, the matched comparison on the same platform, the same total thread allocation, the same budgets and
   ten seeds. Results of different computers are never pooled.
 * **Verification.** Every reported schedule was re-checked by the solver-free checker (`rcfjssp_audit.py`, checks
-  A–E), which reads only the instance and the stored schedule: 5 974 schedules in `results/`, none with a defect.
+  A–E), which reads only the instance and the stored schedule: 6 014 schedules in `results/`, none with a defect.
   Passing establishes feasibility and the reported makespan under the implemented semantics, not optimality.
 
 ## 2. Hardware and software
@@ -60,7 +60,7 @@ The folder catalogue with run counts and limits is in `results/README.md`. In sh
 | PT-W | `ptw_8x1` (all), `ptw_4x2` (i7), `ptw_16x1` (Ryzen, Xeon), `ptw_16x2` (Xeon) | all |
 | layout screens | `screen_ptw_8x1`, `_4x2` (i7, Ryzen); `screen_ptw_16x2`, `_32x1` (Xeon) | all |
 | contextual baselines | `reservatorio_w*_TALNS`, `relato_w*_1800`, `cpo_exp4*` | all |
-| controls of PT-W | `lns_8x1`, `ptw_8x1_PE_semtroca`, `_U_nucleo_uniforme`, `_F_escada_fixa`, `_C_cache_inicial`, `_PD_alpha0`, `_D_instrumentado` | all (F, PD: i7 and Ryzen) |
+| controls of PT-W | `lns_8x1`, `ptw_8x1_PE_semtroca`, `_U_nucleo_uniforme`, `_F_escada_fixa`, `_C_cache_inicial`, `_PD_alpha0`, `_D_instrumentado`; `_FPD_escada_fixa_alpha0` | all (F, PD: i7 and Ryzen; F+PD: Ryzen, four open instances) |
 | independent and scaled instances | `heldout_lns_4x2`, `heldout_ptw_8x1`, `heldout_ptw_4x2`, `heldout_mono_w8`; `escala10_lns_4x2`, `escala10_ptw_8x1` | all; ×10 on i7 and Ryzen |
 | sensitivity of the thermal controls | `sens_T_x05`, `sens_T_x2`, `sens_delta1_deriva3`, `sens_delta6_deriva10`, `sens_subhot2`, `sens_subhot8` | i7, Ryzen |
 
@@ -206,6 +206,14 @@ two-sided stratified permutation test. Per-instance tests in `results/TABLES.md`
 
 (p-values of the mean-difference-of-means test as printed in `results/TABLES.md`; win/tie/loss counts in
 parentheses.)
+
+**Combined control F+PD** (added after the pre-registered campaign; Ryzen only; the four instances without a proved
+optimum, `lcbrtu_0`, `_3`, `_5`, `_8`; seeds 1–10; `experimentos/CAMPANHA_FPD.bat`). The ladder is never adapted and
+α = 0 at the same time; exchanges, geometric ladder, Metropolis acceptance and slot-dependent kernels are unchanged.
+Effect on medians, control minus PT-W: +0.12 [−1.50, +1.62], p = 0.934 (2 / 1 / 1); mean of medians 354.38 (PT-W)
+against 354.50; per instance +0.0, +0.5, +2.0 and −2.0 on `lcbrtu_0`, `_3`, `_5`, `_8` (exact p = 0.462, 0.204, 0.038,
+0.170; none significant after Holm). By the pre-registered rule the result is inconclusive (the interval exceeds ±1
+on four instances); nothing separates the two configurations. Per-instance table in `results/TABLES.md`, Section 4.
 
 ## 9. Instrumented run and search diagnostics
 
