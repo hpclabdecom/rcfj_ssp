@@ -1,36 +1,3 @@
-"""[PROPOSTO -- NAO rodado no i7.] X10: CP-SAT no modelo INTEIRO com a codificacao nativa de
-reservatorio (modelo_reservatorio.build, a mesma da heuristica), 8 fios, no tempo T_i do ALNS-CP
-(Tabela 10), 10 sementes. Separa 'ganho da LNS' de 'ganho da codificacao' em X8/X8b x ALNS-CP.
-
-Instalar como experimentos/x10_reservatorio.py e rodar da raiz do projeto, no i7:
-    python experimentos\\x10_reservatorio.py
-    python rcfjssp_audit.py --results results\\final\\reservatorio_w8_TALNS
-Custo: 10 sementes x soma(T_ALNS) = 10 x 4546,74 s = 12,6 h.
-
-Protocolo: grava <saida>/protocolo.manifest com um hash que cobre versao do OR-Tools, workers,
-escala, orcamento por instancia, SHA de modelo_reservatorio.py, rcfjssp_full.py e rcfjssp_core.py,
-e a CPU. O SHA deste script fica FORA do hash (so proveniencia), como em rcfjssp_final.py.
-Cada execucao grava o log completo do CP-SAT em <saida>/logs/. Se o manifesto existente tiver
-outro hash, ele e arquivado em protocolos_anteriores.jsonl; JSONs (e logs) de outro protocolo sao
-MOVIDOS para <saida>/_DESCARTADO_<hash>/ -- nunca sobrescritos. A retomada pula so o protocolo
-atual. No fim, falha (rc 1) se a pasta tiver JSON de mais de um hash. --escala != 1 so e aceito
-com --saida (para nunca misturar teste com a pasta do paper).
-
-Testes (NAO sao resultado; em todos, 8 workers pedidos sobre 2 CPUs logicas):
-  * esta versao (rodada 3 da auditoria): conteiner (Xeon 2,1 GHz, maquina.fios = 2), OR-Tools
-    9.15.6755 no scratch, --qualquer-maquina, --saida <scratch>/x10b: (T1) --escala 0.02 em
-    lcbrtu_9 s1 (4,1 s) e lcbrtu_1 s1 (3,6 s); (T2) retomada pula as 2; (T3) --escala 0.021:
-    manifesto antigo arquivado, as 2 execucoes antigas MOVIDAS para _DESCARTADO_<hash>/, lcbrtu_9
-    refeito (4,3 s); (T4) editar o script nao muda o hash (retomada pula); (T5) JSON com hash
-    estranho e movido para _DESCARTADO_intruso/; recusa sem --saida; auditor sem solver ok;
-  * versao da rodada 2 (manifesto e logs, mas sobrescrevia em silencio): conteiner, --escala 0.02,
-    lcbrtu_9 s1 4,1 s e lcbrtu_1 s1 3,6 s; o arquivo de lcbrtu_9 que sobrou e o da reexecucao com
-    --escala 0.021 (4,4 s), que sobrescreveu o primeiro -- o defeito corrigido nesta versao;
-  * 1a versao (sem manifesto nem logs): 2 execucoes no VM do laptop do usuario (Ryzen 7 5700U),
-    fora da pasta dele ($HOME/x10test), --escala 0.1: lcbrtu_9 s1 20,7 s e lcbrtu_3 s1 49,6 s.
-    Segundo o parecer, os 2 JSONs registram maquina.fios = 2 (nao reverifiquei: o dispositivo
-    ficou fora do escopo das rodadas 2-3).
-"""
 import argparse, hashlib, json, os, platform, sys, time
 from pathlib import Path
 
@@ -48,21 +15,20 @@ if a.escala != 1.0 and not a.saida:
 
 ROOT = Path(a.raiz).resolve() if a.raiz else Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT)); sys.path.insert(0, str(ROOT / "experimentos"))
-import ortools                                               # noqa: E402
-from ortools.sat.python import cp_model                      # noqa: E402
-from rcfjssp_core import parse                               # noqa: E402
-from rcfjssp_reference import CONFIG, TABLE10                # noqa: E402
-import maquina, modelo_reservatorio as mr, rcfjssp_audit as aud   # noqa: E402,E401
-from rcfjssp_lns import T_ALNS                               # noqa: E402
+import ortools
+from ortools.sat.python import cp_model
+from rcfjssp_core import parse
+from rcfjssp_reference import CONFIG, TABLE10
+import maquina, modelo_reservatorio as mr, rcfjssp_audit as aud
+from rcfjssp_lns import T_ALNS
 
 maquina.exige_i7(a.qualquer_maquina)
 UP = ROOT / "instances" / "upstream" / "RCFJSSP-main" / "Experiment 4"
 OUT = Path(a.saida) if a.saida else ROOT / "results" / "final" / "reservatorio_w8_TALNS"
 (OUT / "logs").mkdir(parents=True, exist_ok=True)
 sha = lambda p: hashlib.sha256(Path(p).read_bytes()).hexdigest()[:16]
-# O hash cobre SO o que define o numero (como SUBSTANTIVOS em rcfjssp_final.py:121-128).
-# sha_script fica FORA do hash e vai so como proveniencia: editar mensagens do script nao
-# invalida execucoes ja feitas.
+
+
 proto = {"x": "X10 reservatorio nativo, modelo inteiro", "ortools": ortools.__version__,
          "workers": a.workers, "escala": a.escala,
          "orcamento": {s: T_ALNS[s] * a.escala for s in sorted(T_ALNS)},
@@ -75,7 +41,6 @@ proveniencia_script = sha(__file__)
 
 
 def descarta(paths, h):
-    """Move JSONs (e seus logs) de outro protocolo para _DESCARTADO_<hash>/ -- nunca sobrescreve."""
     dest = OUT / f"_DESCARTADO_{h}"
     (dest / "logs").mkdir(parents=True, exist_ok=True)
     for pth in paths:
@@ -106,7 +71,7 @@ print("protocolo", proto["hash"], "->", OUT, flush=True)
 for seed in a.sementes:
     for stem in a.instancias:
         alvo = OUT / f"{stem}_s{seed}.json"
-        if alvo.exists():      # so pode ser do protocolo atual: os outros foram movidos acima
+        if alvo.exists():
             old = json.loads(alvo.read_text(encoding="utf-8"))
             assert old.get("protocol_hash") == proto["hash"]
             print(stem, seed, "ja feito", old.get("makespan"), flush=True)

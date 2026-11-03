@@ -104,8 +104,10 @@ per move and per exchange attempt. Held-out and ×10 files carry `conjunto` with
 slightly between scripts (`seconds`/`wall_seconds`, `hint`, `solver`); the schedule and makespan fields are the same
 everywhere, which is what the checker reads. Exact runs keep the solver log next to the JSON (`*.log` or `logs/`).
 `maquina_do_paper` only records whether the CPU is the i7-2600.
+The CP Optimizer files carry `leitura` and `leitura_descricao`, the name and description of the reading of the source
+formulation used by `experimentos/rcfjssp_cpo.py`; every archived run uses the literal reading (`fiel`), whose
+transcription decisions are the ones documented in the root `README.md`.
 
 `protocolo.manifest` lists the protocol fields (solver, threads, budget, constants, calibration hash, SHA-256 of the
-source files that define the model and the search, CPU) and their hash; the root README lists the source files kept
-byte-identical so that these hashes can be recomputed. The control scripts record the hash of the frozen scripts
+source files that define the model and the search, CPU) and their hash; the root README lists, for each source file that defines the model and the search, the SHA-256 recorded in the manifests (the file as executed) and the SHA-256 of the published copy, which has comments and docstrings removed. The control scripts record the hash of the frozen scripts
 they import as well as their own.

@@ -1,29 +1,3 @@
-"""X12: PT-janela (PTW) -- parallel tempering sobre a vizinhanca de janela dos autores.
-
-Desenho completo em paper/PTW_DESENHO.md. Resumo:
-
-  * K replicas = K processos, cada um com `fios` workers do CP-SAT (K*fios = fios da
-    maquina, como nos PT do grupo: replicas = threads). Todas partem da MESMA construcao
-    do X8b (modelo completo, reservatorio nativo, 1a solucao, mesma semente e fracao).
-  * Cada replica faz movimentos de janela (a do ALNS-CP, sec. 4.1.1), resolvidos
-    exatamente pelo CP-SAT como no X8b (mesmo modelo, mesmo fixacao de maquina/ordem).
-  * Energia E = makespan + ALPHA_E * (media dos termos dos jobs). O 2o termo da
-    gradiente nos platos (onde o X8b anda ao acaso) e deixa T em unidades de makespan
-    (escada ~0.15-1.5, igual ordem de grandeza dos PT do grupo).
-  * Nucleo do PT: o NUCLEO DE PROPOSTA depende da temperatura. Replica fria (slot 0):
-    minimiza E com teto = makespan atual (= X8b). Replicas quentes: minimizam um
-    objetivo ALEATORIO (pesos lognormais por job, peso do makespan reduzido) com teto
-    makespan_atual + delta(h): geram propostas que PIORAM. Aceitacao Metropolis em E.
-  * Trocas assincronas (sem barreira): apos EX_EVERY movimentos uma replica tenta trocar
-    de slot com o vizinho (pares pares/impares alternados), probabilidade
-    min(1, exp((1/T_i - 1/T_j)(E_i - E_j))). Escada geometrica ajustada ate ~23% de
-    troca (alvo do RCPMS-II).
-  * Incumbente global (melhor makespan) fica compartilhado; so a replica de slot 0 o adota.
-  * Todo resultado passa pelo auditor sem solver.
-
-    python experimentos/rcfjssp_ptw.py --instancias lcbrtu_3 --sementes 1 --escala 0.05 --qualquer-maquina --saida results/smoke_ptw_teste
-    python experimentos/rcfjssp_ptw.py --relatorio --saida <pasta> --comparar results/final/heur_lns_janela
-"""
 from __future__ import annotations
 
 import argparse
@@ -45,34 +19,31 @@ ROOT = HERE.parent
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(HERE))
 
-import maquina                                           # noqa: E402
-import rcfjssp_lns as L                                  # noqa: E402  (nao modificado)
-from rcfjssp_reference import TABLE10                    # noqa: E402
+import maquina
+import rcfjssp_lns as L
+from rcfjssp_reference import TABLE10
 
 OUT = ROOT / "results" / "final" / "ptw"
 STEMS, T_ALNS = L.STEMS, L.T_ALNS
 
-# Constantes por desenho (literatura PT do grupo + diagnostico do X11). NAO calibradas
-# na Exp 4. Qualquer mudanca depois do smoke so vale se re-calibrada nas 10 instancias
-# de calibracao dos autores (ver paper/PTW_DESENHO.md, secao "Regra de contaminacao").
+
 PTW = dict(
-    ALPHA_E=0.05,      # peso do tempo medio de termino dos jobs na energia (0 = E = makespan)
-    ALPHA_P=0.05,      # idem, na perturbacao das replicas quentes
-    T_MIN=0.15, T_MAX=1.5,   # escada geometrica (unidades de makespan)
-    DELTA_MAX=3,       # folga maxima de makespan da replica mais quente
-    SIGMA=1.0,         # dispersao lognormal dos pesos dos jobs na replica mais quente
-    SUB_HOT=4.0,       # tempo do subproblema na replica mais quente (frio: SUB_TIME do X9)
-    SEM_HINT=True,     # replicas quentes resolvem a janela SEM dica (saem do incumbente)
-    FLIPS_MAX=0,       # numero de inversoes forcadas na replica mais quente (>=1 em toda replica quente)
-    DERIVA=5,          # replica nunca fica mais de DERIVA acima do melhor global
-    EX_EVERY=2,        # movimentos entre tentativas de troca
-    ALVO_TROCA=0.23,   # alvo de aceitacao de troca (RCPMS-II)
-    ADAPTA_CADA=60.0,  # s entre ajustes da escada
-    TROCA=True,        # False = replicas independentes (ablacao sem troca)
+    ALPHA_E=0.05,
+    ALPHA_P=0.05,
+    T_MIN=0.15, T_MAX=1.5,
+    DELTA_MAX=3,
+    SIGMA=1.0,
+    SUB_HOT=4.0,
+    SEM_HINT=True,
+    FLIPS_MAX=0,
+    DERIVA=5,
+    EX_EVERY=2,
+    ALVO_TROCA=0.23,
+    ADAPTA_CADA=60.0,
+    TROCA=True,
 )
 
 
-# ------------------------------------------------------------------ energia
 def termos(sch) -> dict:
     c = {}
     for e in sch:
@@ -88,14 +59,8 @@ def energia(sch, alpha) -> float:
     return mk + alpha * sum(c.values()) / len(c)
 
 
-# --------------------------------------------------------------- subproblema
 def subproblema_pt(inst, mb, inc, livres, teto, tempo, fios, semente, w_mk, pesos_job,
                    inverte=(), sem_hint=False):
-    """Como L.subproblema, mas com objetivo geral: w_mk*mk + sum_j pesos_job[j]*C_j.
-
-    w_mk e pesos_job sao inteiros. Com pesos_job vazio o objetivo e o makespan puro
-    (identico ao do X8b).
-    """
     from ortools.sat.python import cp_model
     import modelo_reservatorio as mr
     mdl, st, en, rl, pr = mr.build(inst, mb)
@@ -115,7 +80,7 @@ def subproblema_pt(inst, mb, inc, livres, teto, tempo, fios, semente, w_mk, peso
         lst.sort(key=lambda e: (e["start"], e["end"]))
         for a, b in zip(lst, lst[1:]):
             mdl.Add(st[b["op"]] >= en[a["op"]])
-    for a_, b_, m_ in inverte:          # inversao forcada: b passa a ir antes de a na maquina m
+    for a_, b_, m_ in inverte:
         mdl.Add(pr[(a_, m_)] == 1); mdl.Add(pr[(b_, m_)] == 1)
         mdl.Add(st[a_] >= en[b_])
     mk = mdl.NewIntVar(0, teto, "mk")
@@ -143,7 +108,6 @@ def subproblema_pt(inst, mb, inc, livres, teto, tempo, fios, semente, w_mk, peso
 
 
 def objetivo_replica(inst, h, rng, prm):
-    """Devolve (delta, w_mk, pesos_job, sub_time_factor) da replica de calor h em [0,1]."""
     nj = inst.jobs
     esc = 1000
     if h <= 0:
@@ -160,7 +124,6 @@ def objetivo_replica(inst, h, rng, prm):
 
 
 def pares_inversao(sch, livres, n, rng):
-    """n pares (a, b, m) de operacoes livres consecutivas na maquina m (a antes de b)."""
     por_maq = {}
     for e in sorted(sch, key=lambda e: (e["start"], e["end"])):
         por_maq.setdefault(e["machine"], []).append(e)
@@ -178,7 +141,6 @@ def pares_inversao(sch, livres, n, rng):
     return out
 
 
-# ------------------------------------------------------------------ replica
 def replica(rid, ref, prazo, fios, semente, comp, trava, slot, Ecur, Tl, tryc, accc,
             tryT, accT, res, prm):
     inst, mb, _ = L.carrega(ref)
@@ -258,7 +220,7 @@ def replica(rid, ref, prazo, fios, semente, comp, trava, slot, Ecur, Tl, tryc, a
                 st["pior_rej"][s] += 1
             if status == "OPTIMAL" and dE >= 0:
                 rho = min(prm["RHO_MAX"], rho * prm["RHO_STEP"])
-        # troca assincrona
+
         if prm["TROCA"] and K > 1 and nmov % prm["EX_EVERY"] == 0:
             ciclo += 1
             with trava:
@@ -285,13 +247,12 @@ def escada(gaps, tmin):
     return T
 
 
-# --------------------------------------------------------------------- pai
 def executa(ref, semente, K, fios, orcamento, prm, inicial=None):
     import rcfjssp_audit as aud
     inst, mb, spec = L.carrega(ref)
     t0 = time.time()
     prazo = t0 + orcamento
-    if inicial is not None:      # partida compartilhada (teste/diagnostico), sem construcao
+    if inicial is not None:
         inc = inicial
     else:
         inc = L.construcao(inst, mb, K * fios, orcamento * prm["CONSTR_FRAC"], semente)
@@ -372,7 +333,6 @@ def protocolo(K, fios, escala, prm) -> dict:
     return p
 
 
-# ---------------------------------------------------------------- relatorio
 def le(pasta: Path, stem):
     return sorted(json.loads(p.read_text(encoding="utf-8"))["makespan"]
                   for p in pasta.glob(f"{stem}_s*.json")

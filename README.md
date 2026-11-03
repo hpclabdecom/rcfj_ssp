@@ -3,8 +3,8 @@
 Replication package of
 
 > Lima, J.C., Vieira, M.P.R., Alem, B.C., Soares, L.C.R., Almeida, A.L.B., Carvalho, M.A.M.
-> *Strengthening the baseline before a new optimization method: a large-language-model-assisted
-> algorithm-engineering case study in multi-resource flexible job shops.* 2026.
+> *Parallel tempering with temperature-dependent constraint programming repair for resource-constrained
+> flexible job shops.* 2026.
 
 The problem is the **resource-constrained flexible job shop scheduling problem (RCFJ-SSP)** of Kasapidis,
 Paraskevopoulos, Mourtos and Repoussis, *European Journal of Operational Research* 320(3), 479–495, 2025
@@ -173,24 +173,27 @@ Identifiers, command-line flags and console messages are in Portuguese. The flag
 
 Every result folder carries a `protocolo.manifest` whose `hash` is the SHA-256 of the fields that define the number
 (solver, budget, parameters, instances, and the SHA-256 of the source files that define the model and the search).
-Each JSON records that hash, the CPU, and the solver version where the script wrote it. For the hashes to remain
-checkable, the following files are kept **byte-for-byte identical** to the versions that ran the campaigns, comments
-included; their SHA-256 (first 16 hex digits) is the one found in the manifests:
+Each JSON records that hash, the CPU, and the solver version where the script wrote it. The manifests record the
+SHA-256 (first 16 hex digits) of the following files **as they were executed**. The published copies of these files
+are the executed files with their comments and docstrings removed and nothing else changed: the executable code,
+the constants and the recorded parameters are identical, which can be checked by comparing the abstract syntax tree
+of a published file with that of the executed file after dropping docstring nodes. Because comments are part of the
+bytes, the SHA-256 of a published copy differs from the recorded one; both are listed. All other source files were
+published the same way; in `experimentos/rcfjssp_cpo.py` the Portuguese description strings of the `--leitura` option were also translated into English (the archived CP Optimizer files keep the original Portuguese description in `leitura_descricao`). The executed bytes are kept by the authors and can be supplied on request.
 
-| file | SHA-256 (16) | recorded in |
-|---|---|---|
-| `rcfjssp_core.py` | `3b1a84cdb95da205` | native-reservoir baseline manifests |
-| `rcfjssp_full.py` | `cf271870e97653d1` | TW-LNS, native-reservoir baseline |
-| `experimentos/modelo_reservatorio.py` | `ecbf9c1de11ebee6` | TW-LNS, PT-W, native-reservoir baseline |
-| `experimentos/rcfjssp_lns.py` | `dc4dda1f6bae91c3` | TW-LNS, PT-W, calibration |
-| `experimentos/rcfjssp_ptw.py` | `e1e033dbb8f92554` | PT-W |
-| `experimentos/rcfjssp_final.py` | `d6e0c3d23082936f` | exact CP-SAT runs (provenance field) |
-| `experimentos/rcfjssp_cpo.py` | `c6d01349a95ff7bd` | CP Optimizer runs (provenance field) |
-| `experimentos/x10_reservatorio.py` | `c67276b639a24cc5` | native-reservoir baseline (provenance field) |
-| `experimentos/instancias_calibracao.py` | `d3dbc24fabdbd2f0` | calibration |
+| file | SHA-256 recorded in the manifests (executed file) | SHA-256 of the published copy | recorded in |
+|---|---|---|---|
+| `rcfjssp_core.py` | `3b1a84cdb95da205` | `8c65d5987fda3839` | native-reservoir baseline manifests |
+| `rcfjssp_full.py` | `cf271870e97653d1` | `e2c692f49ad9139e` | TW-LNS, native-reservoir baseline |
+| `experimentos/modelo_reservatorio.py` | `ecbf9c1de11ebee6` | `2d460baca9eca490` | TW-LNS, PT-W, native-reservoir baseline |
+| `experimentos/rcfjssp_lns.py` | `dc4dda1f6bae91c3` | `280dbe3532c82bc2` | TW-LNS, PT-W, calibration |
+| `experimentos/rcfjssp_ptw.py` | `e1e033dbb8f92554` | `007dbf4ff1a13e49` | PT-W |
+| `experimentos/rcfjssp_final.py` | `d6e0c3d23082936f` | `38c5d58b099e8a28` | exact CP-SAT runs (provenance field) |
+| `experimentos/rcfjssp_cpo.py` | `c6d01349a95ff7bd` | `cb6fa02678822196` | CP Optimizer runs (provenance field) |
+| `experimentos/x10_reservatorio.py` | `c67276b639a24cc5` | `5c69e65fee24f4da` | native-reservoir baseline (provenance field) |
+| `experimentos/instancias_calibracao.py` | `d3dbc24fabdbd2f0` | `6074567e152af583` | calibration |
 
-All other source files had their comments and docstrings removed for publication; their behaviour is documented in
-the README of each folder. `.gitattributes` sets `* -text` so that no line-ending conversion alters these files on
+`.gitattributes` sets `* -text` so that no line-ending conversion alters these files on
 checkout. `instances/SHA256SUMS` lists the SHA-256 of every instance file (`sha256sum -c SHA256SUMS` inside
 `instances/`).
 

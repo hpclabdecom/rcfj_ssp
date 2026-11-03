@@ -1,32 +1,3 @@
-"""All resource types at once -- Experiment 4, the only one still open.
-
-Tables 7-9 are closed: every instance proven optimal in seconds.  Table 10 is
-not.  The authors' CP model runs 1800 s and proves nothing (average gap 19.11%
-against its own bound), and their ALNS-CP closes it only to 17.43%, with
-47.27% left on ``lcbrtu8``.  This is where an exact invariance would pay, and
-the only place in the benchmark where anything can be gained.
-
-The model is the union of the three validated ones, each already checked
-against its own published table:
-
-    Eq. (4)      one NoOverlap per machine
-    Eq. (5)      utilities: Pulse over the machine interval, rate u_{i,k,r}
-    Eq. (6)      tools: Pulse over the operation, capacity = number of copies
-    Eqs. (7)-(11) machine buffers, blocking when y_k = 0
-    Eq. (12)     resource level non-negative -- no upper bound per resource
-    Eq. (13)     WIP buffer caps the total of the resources it stores
-
-Because nothing here is proven optimal upstream, "validation" means something
-weaker and must be stated as such: the model is *consistent* with Table 10 if
-our upper bound is at or above their lower bound and our lower bound is at or
-below their best known.  A model that is too loose shows up as an upper bound
-below their best known that no verifier accepts; a model that is too tight
-shows up as a lower bound above their best known, which would be a proof that
-one of us is wrong.
-
-Usage:
-    cd RCFJSSP && python rcfjssp_full.py --instances 2 --limit 300
-"""
 from __future__ import annotations
 
 import argparse
@@ -52,7 +23,7 @@ def build(inst: Instance, machine_buffers: bool = True,
     starts, ends, release, presence = {}, {}, {}, {}
     by_machine: Dict[int, list] = {}
     by_buffer: Dict[int, list] = {}
-    util_terms: Dict[int, list] = {}          # uid -> [(interval, rate)]
+    util_terms: Dict[int, list] = {}
     by_tool: Dict[int, list] = {}
 
     for k, op in enumerate(inst.operations):
@@ -70,13 +41,13 @@ def build(inst: Instance, machine_buffers: bool = True,
                                                 lit, f"i{k}_{machine}")
             by_machine.setdefault(machine, []).append(work)
             if cap is not None:
-                # Eq. (9), literal: occupancy [start, release), cap y_k + 1.
-                # See rcfjssp_buffers for why the earlier encoding was tighter.
+
+
                 by_buffer.setdefault(machine, []).append(
                     model.NewOptionalIntervalVar(
                         starts[k], model.NewIntVar(0, horizon, f"o{k}_{machine}"),
                         release[k], lit, f"occ{k}_{machine}"))
-            # Eq. (5): utilities are consumed while the machine is working
+
             for uid, rate in op.rates[slot]:
                 if rate:
                     util_terms.setdefault(uid, []).append((work, rate))
@@ -95,10 +66,10 @@ def build(inst: Instance, machine_buffers: bool = True,
     for machine, intervals in by_buffer.items():
         model.AddCumulative(intervals, [1] * len(intervals),
                             inst.buffers[machine - 1] + 1)
-    for uid, pairs in util_terms.items():                       # Eq. (5)
+    for uid, pairs in util_terms.items():
         model.AddCumulative([iv for iv, _r in pairs],
                             [r for _iv, r in pairs], inst.utilities[uid])
-    for tool, intervals in by_tool.items():                     # Eq. (6)
+    for tool, intervals in by_tool.items():
         copies = inst.tools[tool]
         if copies == 1:
             model.AddNoOverlap(intervals)
@@ -116,7 +87,7 @@ def build(inst: Instance, machine_buffers: bool = True,
         job_start[job] = starts[index[(job, chain[0])]]
         job_end[job] = ends[index[(job, chain[-1])]]
 
-    # Eqs. (12)-(13): reservoirs and WIP buffers
+
     events = []
     for job in range(inst.jobs):
         for uid, qty in inst.required[job].items():
@@ -153,11 +124,8 @@ def build(inst: Instance, machine_buffers: bool = True,
             model.Add(level <= capacity)
 
     if windows:
-        # Domain reductions licensed by Invariance I (rcfjssp_invariance.py):
-        # the resource constraints see only job windows, so bounds proved on
-        # the window relaxation are valid here.  These are redundant -- they
-        # cut no feasible schedule -- and exist to help propagation reach a
-        # conclusion the order-boolean encoding reaches slowly on its own.
+
+
         for job, (lo, hi) in windows.items():
             chain = sorted(o.index for o in inst.ops_of_job(job))
             if lo:

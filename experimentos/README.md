@@ -70,8 +70,8 @@ before any of its runs. The scripts it uses:
   before running; keep that file in place.
 * **Reports.** `rcfjssp_lns.py --relatorio --saida <folder>` and `rcfjssp_ptw.py --relatorio --saida <folder>
   --comparar <control>` print the per-instance summary of a finished folder. `rcfjssp_final.py --relatorio` expects a
-  parent folder holding only exact-model subfolders (`--saida <folder>`); the file is kept byte-identical for its
-  recorded hash, so use `analise_campanhas.py` for the exact-model tables.
+  parent folder holding only exact-model subfolders (`--saida <folder>`); its code is unchanged from the executed version, so use `analise_campanhas.py` for the
+  exact-model tables.
 
 ## TW-LNS (`rcfjssp_lns.py --viz janela`)
 

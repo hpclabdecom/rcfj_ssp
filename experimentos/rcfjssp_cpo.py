@@ -1,74 +1,3 @@
-"""Transcricao literal do Box I de Kasapidis et al. (EJOR 320(3), 2025) em IBM CP Optimizer.
-
-Experimento X6 do ``paper/PAPER_EJOR.md``: separar **modelo** de **solver**.
-
-Por que existe
---------------
-A tese do paper e que ler a formulacao com fidelidade bate o estado da arte. Um
-parecerista vai perguntar o obvio: o ganho vem da leitura fiel ou do CP-SAT? O
-nosso modelo principal (``rcfjssp_full.py``) e a transcricao das Eqs. (1)-(14)
-para o CP-SAT, que nao tem ``Alternative``, ``AlwaysIn`` nem funcoes
-cumulativas; a traducao passa por literais de presenca, ``Cumulative`` com
-capacidade ``y_k + 1`` e booleanos de ordem para os reservatorios. Este arquivo
-escreve as mesmas equacoes no **mesmo solver dos autores**, primitiva por
-primitiva, para que a comparacao "CP deles x CP nosso" tenha o solver fixo.
-
-Correspondencia com o Box I (secao 3.3 do artigo)
--------------------------------------------------
-    (1)  minimize Cmax
-    (2)  alternative(tau_i, mu_i)                    mu_i = {phi_ik : k in M_i}
-    (3)  end_before_start(tau_j, tau_i)              j predecessor de i
-    (4)  no_overlap(sigma_k)                         sigma_k = seq(phi_ik)
-    (5)  sum pulse(phi_ik, u_ikr) <= Ubar_r
-    (6)  sum pulse(tau_i, 1) <= Tbar_r               i com r em T_i
-    (7)  presence_of(phib_ik) == presence_of(phi_ik)
-    (8)  Y_k = sum pulse(phib_ik, 1)
-    (9)  always_in(Y_k, phi_ik, 0, y_k)
-    (10) start_of(phib_ik) == end_of(phi_ik)         -> start_at_end
-    (11) end_of(phib_ik) == start_of(tau_j)          -> end_at_start, j sucessor
-    (12) nivel de cada r em R >= 0                   step_at_end(tau_i*) - step_at_start(tau_io)
-    (13) soma dos niveis guardados em z <= Wbar_z
-    (14) Cmax >= end_of(tau_i)
-
-Duas escolhas de traducao, declaradas:
-
-* (10)/(11) usam ``start_at_end``/``end_at_start``, que so valem quando os dois
-  intervalos estao presentes. E o que as Eqs. dizem para um ``phib`` ausente
-  (maquina nao escolhida), e evita o valor-padrao 0 de ``end_of`` de intervalo
-  ausente, que tornaria (11) inviavel.
-* Para a ultima operacao do job (sem sucessor) nada fixa o fim de ``phib``;
-  como no artigo, a espera pode ter comprimento zero.
-
-A configuracao por experimento vem de ``rcfjssp_reference.CONFIG`` -- a mesma
-tabela que o modelo CP-SAT e o auditor usam. Discordar de uma linha dali e
-discordar dos dois modelos ao mesmo tempo.
-
-Licenca
--------
-A edicao *Community* do CPLEX (``pip install cplex``) limita o tamanho do
-modelo: da para validar nos Experimentos 1-3 (pequenos), **nao** no 4. Para o
-Experimento 4 e preciso o CPLEX Optimization Studio completo -- gratuito para
-docentes pela IBM Academic Initiative. Os autores usaram CP Optimizer 20.1.0,
-configuracao de busca padrao, 1800 s (secao 5.2).
-
-Com o Studio instalado, basta ``pip install docplex`` (NAO instale o pacote
-``cplex`` do pip: ele traz um cpoptimizer Community que pode vencer no PATH).
-O executavel e achado por ``--cpo-exe``, pela variavel ``CPO_EXE`` ou na pasta
-padrao do Studio; o script **recusa** a edicao Community salvo com
-``--permite-community``.
-
-Uso
----
-    python experimentos/rcfjssp_cpo.py --exp 1 --config zero --check
-    python experimentos/rcfjssp_cpo.py --exp 4 --limit 1800 --out results/cpo/exp4
-    python rcfjssp_audit.py --results results/cpo/exp4      # auditoria sem solver
-    python experimentos/rcfjssp_cpo.py --exp 3 --leitura max_recurso --check --out results/leituras
-      (X5: leituras alternativas -- ver LEITURAS abaixo)
-
-Cada resultado grava o escalonamento no formato do auditor
-(``op, job, index, machine, tool, start, end, release``), de modo que o
-``rcfjssp_audit.py`` confere o que este script produziu sem confiar nele.
-"""
 from __future__ import annotations
 
 import argparse
@@ -87,9 +16,9 @@ ROOT = HERE.parent
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(HERE))
 
-from rcfjssp_core import Instance, parse                     # noqa: E402
-from rcfjssp_reference import CONFIG, TABLE10, published_for  # noqa: E402
-import maquina                                               # noqa: E402
+from rcfjssp_core import Instance, parse
+from rcfjssp_reference import CONFIG, TABLE10, published_for
+import maquina
 
 UP = ROOT / "instances" / "upstream" / "RCFJSSP-main"
 MODEL_VERSION = "2026-09-30-cpo-boxI-literal"
@@ -104,20 +33,14 @@ CONFIGS = {"1": ("declared", "zero", "unlimited"),
            "4": ("all",)}
 
 
-# ------------------------------------------------------------------ leituras
-# Experimento X5: cada leitura alternativa do artigo/arquivos, aplicada SOBRE o
-# Box I literal. A tabela "leitura -> divergencias contra a tabela publicada" e o
-# que sustenta, no paper, que a fidelidade de leitura e necessaria e nao so
-# suficiente. "fiel" e o modelo do paper; as demais sao as leituras rejeitadas
-# em AUDIT.md (decisoes 4, 5 e 6) mais a semantica de buffer anterior ao parecer.
 LEITURAS = {
-    "fiel":              "Box I literal com as sete decisoes de AUDIT.md",
-    "max_recurso":       "decisao 4 invertida: o campo max limita cada recurso (nivel <= max)",
-    "maq_buffers_exp3":  "decisao 5 invertida: buffers de maquina aplicados no Experimento 3",
-    "pasta25_small":     "decisao 6 invertida: 'Small buffers' lido como a pasta 25",
-    "eq12_sem_wip":      "decisao 6, 3a coluna: 'unlimited WIP' da prosa (Eq. 12 mantida, Eq. 13 retirada)",
-    "buffer_restritivo": "codificacao anterior ao parecer: bloqueio se y_k = 0, espera <= y_k em todo instante se y_k > 0",
-    "buffer_global":     "Eq. (9) sem o intervalo: Y_k <= y_k em todo instante, tambem com y_k = 0 (vira no-wait)",
+    "fiel":              "literal Box I with the transcription decisions documented in the README",
+    "max_recurso":       "alternative reading: the max field bounds each resource (level <= max)",
+    "maq_buffers_exp3":  "alternative reading: machine buffers also applied in Experiment 3",
+    "pasta25_small":     "alternative reading: 'Small buffers' read as the folder 25",
+    "eq12_sem_wip":      "alternative reading: 'unlimited WIP' (Eq. 12 kept, Eq. 13 removed)",
+    "buffer_restritivo": "alternative reading: blocking if y_k = 0, waiting <= y_k at every instant if y_k > 0",
+    "buffer_global":     "alternative reading: Eq. (9) without the interval, Y_k <= y_k at every instant, also with y_k = 0 (no-wait)",
 }
 
 
@@ -149,7 +72,7 @@ def build(inst: Instance, spec: dict):
 
     mdl = CpoModel(name=Path(inst.path).stem)
     horizon = inst.horizon() * 2
-    mb = spec["machine_buffers"]          # "declared" | "zero" | "unlimited" | "off"
+    mb = spec["machine_buffers"]
 
     tau: Dict[int, object] = {}
     phi: Dict[tuple, object] = {}
@@ -175,9 +98,9 @@ def build(inst: Instance, spec: dict):
                 b = mdl.interval_var(optional=True, end=(0, horizon),
                                      name=f"phib_{i}_{k}")
                 phib[(i, k)] = b
-                mdl.add(cm.presence_of(b) == cm.presence_of(a))          # (7)
-                mdl.add(cm.start_at_end(b, a))                           # (10)
-        mdl.add(cm.alternative(tau[i], modes))                           # (2)
+                mdl.add(cm.presence_of(b) == cm.presence_of(a))
+                mdl.add(cm.start_at_end(b, a))
+        mdl.add(cm.alternative(tau[i], modes))
         if spec["tools"] and op.tool is not None and op.tool in inst.tools:
             tool_pulses.setdefault(op.tool, []).append(cm.pulse(tau[i], 1))
 
@@ -187,20 +110,20 @@ def build(inst: Instance, spec: dict):
         chain = sorted(o.index for o in inst.ops_of_job(job))
         for a, b in zip(chain, chain[1:]):
             i, j = index[(job, a)], index[(job, b)]
-            mdl.add(cm.end_before_start(tau[i], tau[j]))                 # (3)
+            mdl.add(cm.end_before_start(tau[i], tau[j]))
             for k, _eta in inst.operations[i].modes:
                 if (i, k) in phib:
-                    mdl.add(cm.end_at_start(phib[(i, k)], tau[j]))       # (11)
+                    mdl.add(cm.end_at_start(phib[(i, k)], tau[j]))
         first[job] = index[(job, chain[0])]
         last[job] = index[(job, chain[-1])]
 
     for k, ivs in by_machine.items():
-        mdl.add(cm.no_overlap(mdl.sequence_var(ivs, name=f"sigma_{k}")))  # (4)
+        mdl.add(cm.no_overlap(mdl.sequence_var(ivs, name=f"sigma_{k}")))
 
-    for uid, pulses in util.items():                                     # (5)
+    for uid, pulses in util.items():
         mdl.add(cm.sum(pulses) <= inst.utilities[uid])
 
-    for r, pulses in tool_pulses.items():                                # (6)
+    for r, pulses in tool_pulses.items():
         mdl.add(cm.sum(pulses) <= inst.tools[r])
 
     if mb in ("declared", "zero"):
@@ -209,14 +132,14 @@ def build(inst: Instance, spec: dict):
             members = [phib[(i, kk)] for (i, kk) in phib if kk == k]
             if not members:
                 continue
-            Y_k = cm.sum([cm.pulse(b, 1) for b in members])              # (8)
+            Y_k = cm.sum([cm.pulse(b, 1) for b in members])
             leitura = spec.get("leitura")
             if leitura == "buffer_global" or (leitura == "buffer_restritivo" and y_k > 0):
-                mdl.add(cm.always_in(Y_k, (0, horizon), 0, y_k))         # (9) lida errada
+                mdl.add(cm.always_in(Y_k, (0, horizon), 0, y_k))
                 continue
             for (i, kk), a in phi.items():
                 if kk == k:
-                    mdl.add(cm.always_in(Y_k, a, 0, y_k))                # (9)
+                    mdl.add(cm.always_in(Y_k, a, 0, y_k))
 
     if spec["resources"]:
         level = {}
@@ -233,36 +156,26 @@ def build(inst: Instance, spec: dict):
                 continue
             f = cm.sum(terms)
             if start:
-                # O artigo supoe estoque inicial zero (secao 3.1); todas as
-                # instancias tem start = 0, conferido em 30/09/2026.
+
+
                 raise ValueError(f"{inst.path}: estoque inicial {start} != 0")
             level[r] = f
-            mdl.add(f >= 0)                                              # (12)
+            mdl.add(f >= 0)
             if spec.get("leitura") == "max_recurso" and _top > 0:
-                mdl.add(f <= _top)                                       # leitura rejeitada
+                mdl.add(f <= _top)
         if spec["wip"]:
             for z, cap in inst.wip.items():
                 stored = [level[r] for r, (zz, _s, _t) in inst.nonrenewable.items()
                           if zz == z and r in level]
                 if stored:
-                    mdl.add(cm.sum(stored) <= cap)                       # (13)
+                    mdl.add(cm.sum(stored) <= cap)
 
-    cmax = cm.max([cm.end_of(tau[i]) for i in tau])                      # (14)
-    mdl.add(cm.minimize(cmax))                                           # (1)
+    cmax = cm.max([cm.end_of(tau[i]) for i in tau])
+    mdl.add(cm.minimize(cmax))
     return mdl, tau, phi, phib
 
 
 def find_cpo_exe(explicit: Optional[str] = None) -> Optional[str]:
-    """Qual cpoptimizer usar. A ordem importa, e o motivo e um so.
-
-    ``pip install cplex`` instala um ``cpoptimizer`` da edicao **Community** na
-    pasta Scripts do Python, e ele costuma vir antes no PATH que o do CPLEX
-    Optimization Studio (licenca academica). Deixar o docplex escolher sozinho
-    faz o Experimento 4 falhar com "Problem size limit exceeded" -- ou, pior,
-    rodar os Exps. 1-3 na Community sem que ninguem perceba. Por isso: argumento
-    explicito, depois a variavel CPO_EXE, depois a instalacao do Studio; so em
-    ultimo caso o PATH. A edicao efetivamente usada fica gravada em cada JSON.
-    """
     import glob
     import shutil
     if explicit:
@@ -274,38 +187,27 @@ def find_cpo_exe(explicit: Optional[str] = None) -> Optional[str]:
             "/Applications/CPLEX_Studio*/cpoptimizer/bin/*/cpoptimizer"]
     for pat in pats:
         hits = sorted(glob.glob(pat))
-        # A Community instala em CPLEX_Studio_Community222, que em ordem
-        # alfabetica vem DEPOIS de CPLEX_Studio2211: sem este filtro, com as
-        # duas instaladas, a Community ganharia (visto no vaio em 30/09).
+
+
         full = [h for h in hits if "community" not in h.lower()]
         if full:
-            return full[-1]                      # a versao completa mais nova
+            return full[-1]
         if hits:
             return hits[-1]
     return shutil.which("cpoptimizer")
 
 
-CPO_EXE: Optional[str] = None                   # fixado em main()
+CPO_EXE: Optional[str] = None
 
 
 def prepara_ambiente(exe: Optional[str]) -> None:
-    """Poe no PATH as pastas de DLL do proprio Studio do executavel escolhido.
-
-    O cpoptimizer.exe do Studio completo depende da DLL do CPLEX
-    (``cplex\\bin\\x64_win64\\cplex2220.dll``). O instalador acrescenta essa pasta
-    ao PATH do sistema, mas um terminal aberto ANTES da instalacao nao enxerga a
-    mudanca -- foi o que aconteceu no i7 em 02/10 ("cplex dll is not
-    accessible"). O subprocesso herda os.environ, entao basta prefixar aqui.
-    Prefixar a pasta do MESMO Studio tambem impede que uma DLL de outra
-    instalacao (a Community, por exemplo) seja carregada no lugar.
-    """
     if not exe:
         return
     p = Path(exe)
     if len(p.parents) < 4:
         return
-    studio = p.parents[3]                       # ...\CPLEX_Studio222
-    sub = p.parent.name                         # x64_win64 | x86-64_linux | ...
+    studio = p.parents[3]
+    sub = p.parent.name
     dirs = [studio / "cplex" / "bin" / sub, studio / "cpoptimizer" / "bin" / sub,
             studio / "opl" / "bin" / sub]
     atual = os.environ.get("PATH", "")
@@ -331,7 +233,7 @@ def solve(inst: Instance, spec: dict, limit: float, workers: Optional[int],
         sol = mdl.solve(log_output=None, **extra, **params)
     seconds = round(time.perf_counter() - started, 1)
 
-    # Maiusculas, como no CP-SAT: o auditor so confere LB = UB em "OPTIMAL".
+
     status = str(sol.get_solve_status()).upper() if sol else "UNKNOWN"
     schedule = None
     makespan = lb = raw_bound = None
@@ -356,9 +258,8 @@ def solve(inst: Instance, spec: dict, limit: float, workers: Optional[int],
         makespan = int(sol.get_objective_values()[0])
         bounds = sol.get_objective_bounds()
         raw_bound = bounds[0] if bounds else None
-        # Observado no teste de 30/09: o CP Optimizer declara "Optimal" com o
-        # limite bruto ainda abaixo do valor (ex.: 110 x 107). O limite bruto
-        # fica gravado; o LB reportado, sob "Optimal", e o proprio valor.
+
+
         lb = int(round(raw_bound)) if raw_bound is not None else None
         if status == "OPTIMAL":
             lb = makespan
@@ -368,10 +269,8 @@ def solve(inst: Instance, spec: dict, limit: float, workers: Optional[int],
     return {"instance": Path(inst.path).stem, "schedule": schedule,
             "status": str(status), "makespan": makespan, "lower_bound": lb,
             "seconds": seconds, "cpo_raw_bound": raw_bound,
-            # Tempo medido pelo PROPRIO solver, sem o custo de subir o processo
-            # cpoptimizer (~0,1-0,5 s). E este que se compara com os tempos das
-            # Tabelas 7-9, que vao de 0,01 s: com o relogio externo a abertura do
-            # processo dominaria os casos faceis (compara_tempos.py).
+
+
             "solve_time": (sol.get_solve_time() if sol else None),
             "total_time": info.get("TotalTime"),
             "solver": {"name": "IBM CP Optimizer",
@@ -440,7 +339,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             log = (out / "logs" / f"{name}.log") if out else None
             try:
                 row = solve(inst, spec, limit, args.workers, log)
-            except Exception as exc:                       # noqa: BLE001
+            except Exception as exc:
                 if "size limit" in str(exc):
                     print(f"\nERRO: o cpoptimizer usado ({CPO_EXE}) e a edicao Community.\n"
                           "Aponte para o do CPLEX Optimization Studio: --cpo-exe ou "
@@ -470,8 +369,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                 row.update(their_lb=lb_, their_cp=cp_, their_alns=alns_)
             flag = ""
             if pub is not None:
-                # Divergencia so conta com prova: um valor nao-otimo diferente do
-                # publicado e estouro de tempo, nao refutacao da leitura.
+
+
                 if row["makespan"] == pub:
                     flag = "confere"
                 elif row["status"] == "OPTIMAL":

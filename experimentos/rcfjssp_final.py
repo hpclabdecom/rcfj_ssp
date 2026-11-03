@@ -1,58 +1,3 @@
-"""Campanha FINAL do Experimento 4 (Tabela 10), sob protocolo unico. Experimentos X1 e X2.
-
-Por que refazer
----------------
-Os numeros do Experimento 4 hoje vem de **tres** execucoes diferentes, com
-arquivos em tres lugares:
-
-* ``results/campaign/exp4_*``        -- campanha de 14/08, modelo literal, 1 semente;
-* ``results/auditor_literal_exp4.json`` -- execucao do auditor, com *hints* dos
-  incumbentes, e **sem escalonamento gravado** em 9 das 10 instancias;
-* ``results/ab_invariance/*``        -- o experimento pareado da invariancia
-  (braco ``baseline`` = modelo literal, sem janelas).
-
-O "melhor UB" do README e o maximo entre elas, e dois valores citados
-(``lcbrtu_3`` = 388 e 387) **nao tem escalonamento em disco** -- o melhor
-certificado hoje e 395. E o mesmo problema que o Set-I do SSP-NPM teve e resolveu
-com uma campanha de protocolo unico e hash: e o que este script faz.
-
-Os dois bracos
---------------
-``--braco relato`` (X1)  o numero que vai para a Tabela do paper. Sem *hint*,
-    sem cota superior, sem janela; CP-SAT de fabrica exceto ``workers``,
-    ``max_time_in_seconds`` e ``random_seed``. 1800 s -- o limite da coluna CP do
-    artigo (secao 5.2). ``--sementes 10`` da tres leituras honestas:
-      * a semente 1 sozinha   -> comparavel a coluna CP deles (uma execucao);
-      * o melhor das 10       -> comparavel ao ALNS-CP (melhor de 10 execucoes);
-      * media e desvio        -> o que um parecerista vai pedir.
-
-``--braco fecho`` (X2)   so para limites e provas. Parte do melhor escalonamento
-    **certificado** (auditado sem solver) como *hint*. Nunca entra na coluna de
-    UB do relato; entra, declarado, na coluna de LB/otimalidade.
-
-Cada execucao grava o log completo do CP-SAT (``log_search_progress``) -- o que o
-parecer de 14/08 exigiu para que um LB possa ser citado -- e um manifesto do
-protocolo com o hash deste script, do modelo e da instancia.
-
-Maquina: SO o i7-2600 (decisao de 30/09). O script recusa outra CPU, salvo com
-``--qualquer-maquina`` (teste), e grava a CPU no hash do protocolo.
-
-Uso (i7-2600, 4 nucleos / 8 fios; ~5 h por semente nas 10 instancias)
---------------------------------------------------------------------
-    python experimentos/rcfjssp_final.py --braco relato --sementes 1 2 3 4 5 6 7 8 9 10
-    python experimentos/rcfjssp_final.py --braco fecho  --instancias lcbrtu_0 lcbrtu_3 lcbrtu_5 lcbrtu_7 lcbrtu_8
-    python experimentos/rcfjssp_final.py --relatorio
-    python rcfjssp_audit.py --results results/final/relato_w8_1800
-
-O fecho (X2) parte SO de escalonamentos do proprio i7 (do X1 ou do X6): rode-o
-depois do X1.
-
-O tempo e de relogio de parede (1800 s por execucao), entao o custo nao depende
-da maquina; o que depende e a qualidade do resultado em 1800 s.
-
-Retomavel: o que ja existe com o mesmo hash de protocolo e escalonamento gravado
-nao e refeito; o que diverge e recomputado, nunca misturado.
-"""
 from __future__ import annotations
 
 import argparse
@@ -71,23 +16,19 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
 sys.path.insert(0, str(ROOT))
 
-from rcfjssp_core import parse                     # noqa: E402
-from rcfjssp_reference import TABLE10              # noqa: E402
+from rcfjssp_core import parse
+from rcfjssp_reference import TABLE10
 
 sys.path.insert(0, str(HERE))
-import maquina                                     # noqa: E402
+import maquina
 
 UP = ROOT / "instances" / "upstream" / "RCFJSSP-main" / "Experiment 4"
-# Tudo que vai para o paper sai do i7-2600. A pasta continua results/final --
-# e onde o X1 ja em curso no i7 (30/09) esta gravando; muda-la faria a retomada
-# nao enxergar o que ja foi feito.
+
+
 OUT = ROOT / "results" / "final"
 STEMS = [f"lcbrtu_{n}" for n in range(10)]
 
-# Onde procurar escalonamentos certificados para o braco "fecho": SO os do i7.
-# As campanhas de agosto (mini-PC Ryzen) nao entram no paper -- nem como hint,
-# porque um LB provado a partir delas dependeria de uma execucao que o texto
-# nao pode citar. --aceita-historico as inclui, apenas para teste.
+
 CERT_GLOBS_I7 = ["results/final/relato_*/*.json",
                  "results/final/cpo_exp4/*.json"]
 CERT_GLOBS_HISTORICO = ["results/campaign/exp4_*_all.json",
@@ -108,22 +49,15 @@ def protocol(braco: str, workers: int, limit: float) -> dict:
          "sha_rcfjssp_full": sha(ROOT / "rcfjssp_full.py"),
          "sha_rcfjssp_core": sha(ROOT / "rcfjssp_core.py"),
          "sha_script": sha(Path(__file__)),
-         # a CPU entra no hash: execucoes de maquinas diferentes nunca se misturam
+
          "cpu": maquina.nome_cpu(),
-         # De onde o fecho tira o hint. E substantivo: em 02/10 o X2 rodou com a
-         # versao de 30/09, que ainda aceitava escalonamentos do Ryzen (o 339 de
-         # lcbrtu_0). Com este campo, aquelas execucoes deixam de ser compativeis
-         # e sao refeitas, em vez de aceitas como "ja feito".
+
+
          "hint_fontes": list(CERT_GLOBS) if braco == "fecho" else None}
     p["hash"] = hashlib.sha256(json.dumps(p, sort_keys=True).encode()).hexdigest()[:16]
     return p
 
 
-# O que define o NUMERO de uma execucao. sha_script fica de fora de proposito: o
-# script muda por relatorio, guarda de maquina, mensagens -- nada disso muda o
-# que o solver resolve. A versao de 30/09 incluia sha_script no hash, e o X1 ja
-# comecou com ela; sem esta chave, qualquer edicao do script faria a retomada
-# refazer 50 h de execucoes validas.
 SUBSTANTIVOS = ("braco", "workers", "max_time_in_seconds", "hint", "modelo",
                 "sha_rcfjssp_full", "sha_rcfjssp_core", "hint_fontes")
 
@@ -133,7 +67,6 @@ def compativeis(a: dict, b: dict) -> bool:
 
 
 def certified_best(stem: str) -> Optional[dict]:
-    """Menor makespan com escalonamento gravado E aprovado pelo auditor sem solver."""
     import rcfjssp_audit as audit
     from rcfjssp_reference import CONFIG
     inst = parse(UP / f"{stem}.fjs")
@@ -265,8 +198,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     p.add_argument("--braco", choices=("relato", "fecho"), default="relato")
     p.add_argument("--sementes", type=int, nargs="*", default=[1])
     p.add_argument("--instancias", nargs="*", default=STEMS)
-    # 8 = os fios do i7-2600 (4 nucleos / 8 fios) em que a campanha final roda.
-    # E tambem o numero de nucleos do Xeon E5-2650 dos autores.
+
+
     p.add_argument("--workers", type=int, default=8)
     p.add_argument("--limite", type=float, default=1800.0)
     p.add_argument("--tag", default="", help="sufixo da pasta (ex.: _w8 para a ablacao)")
@@ -298,8 +231,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     proto = protocol(args.braco, args.workers, args.limite)
     folder = Path(args.saida) / f"{args.braco}_w{args.workers}_{int(args.limite)}{args.tag}"
     folder.mkdir(parents=True, exist_ok=True)
-    # Hashes aceitos na retomada: o atual e os de manifestos anteriores desta
-    # pasta que coincidem nos campos substantivos (ver SUBSTANTIVOS).
+
+
     aceitos = {proto["hash"]}
     manifest = folder / "protocolo.manifest"
     history = folder / "protocolos_anteriores.jsonl"
@@ -318,7 +251,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         else:
             print(f"AVISO: protocolo anterior {prev.get('hash')} difere em campo "
                   f"substantivo; suas execucoes serao REFEITAS, nao misturadas.", flush=True)
-    # Extensao .manifest de proposito: o auditor le todo *.json da pasta.
+
     manifest.write_text(json.dumps(proto, indent=1), encoding="utf-8")
     print(f"protocolo {proto['hash']} -> {os.path.relpath(folder, ROOT)}", flush=True)
 
@@ -327,9 +260,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             target = folder / f"{stem}_s{seed}.json"
             if target.exists():
                 old = json.loads(target.read_text(encoding="utf-8"))
-                # Feito = mesmo protocolo e (solucao gravada, ou os 1800 s gastos
-                # sem solucao). Sem a segunda condicao, um UNKNOWN honesto seria
-                # refeito para sempre a cada retomada.
+
+
                 spent = (old.get("seconds") or 0) >= 0.99 * args.limite
                 if old.get("protocol_hash") in aceitos and (old.get("schedule") or spent):
                     print(f"{stem} s{seed}: ja feito ({old['makespan']})", flush=True)

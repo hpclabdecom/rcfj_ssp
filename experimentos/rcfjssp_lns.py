@@ -1,36 +1,3 @@
-"""X8: heuristica contra o ALNS-CP, no tempo dos autores (Tabela 10). Desenho em paper/HEURISTICA.md.
-
-Protocolo (o mesmo do ALNS-CP na Tabela 10, secao 5.2 do artigo):
-  * so as 10 instancias do Experimento 4 -- as unicas em que os autores rodaram
-    heuristica neste benchmark (Exps. 1-3: so o CP exato);
-  * orcamento por execucao = coluna "Time (s)" do ALNS-CP na Tabela 10, por
-    instancia (623 s em lcbrtu_0 ... 207 s em lcbrtu_9), tempo de parede,
-    contando construcao e abertura de processos;
-  * 10 execucoes (sementes 1-10); reporta-se melhor e mediana;
-  * i7-2600, 8 fios: 4 caminhantes x 2 fios do CP-SAT.
-
-Algoritmo (constantes fixadas por desenho, SEM calibracao -- as 10 instancias
-sao o proprio teste):
-  1. Construcao: CP-SAT no modelo inteiro com a codificacao nativa de
-     reservatorio (modelo_reservatorio.py), todos os fios, ate a 1a solucao.
-  2. Busca: cada caminhante escolhe uma vizinhanca, libera as operacoes dela
-     (maquina e tempo livres), fixa maquina e ordem por maquina das demais, e
-     resolve o subproblema exatamente com CP-SAT (SUB_TIME s, teto = makespan
-     atual, hint = incumbente). Aceita igual ou melhor (movimentos laterais
-     atravessam platos). Vizinhancas:
-       janela    -- operacoes que tocam uma janela de tempo (a do ALNS-CP)
-       maquinas  -- maquina-gargalo (a do ultimo termino) + uma parceira
-       material  -- jobs que produzem/consomem um mesmo recurso (Eqs. 12-13)
-       critica   -- cadeia sem folga que termina no makespan
-     Escolha por pesos adaptativos (sucesso recente); tamanho por RHO
-     adaptativo (cresce se o subproblema fecha sem melhorar, encolhe se estoura).
-  3. Incumbente compartilhado entre caminhantes; todo resultado gravado passa
-     antes pelo auditor sem solver.
-
-    python experimentos/rcfjssp_lns.py --sementes 1 2 3 4 5 6 7 8 9 10
-    python experimentos/rcfjssp_lns.py --relatorio
-    python rcfjssp_audit.py --results results/final/heur_lns
-"""
 from __future__ import annotations
 
 import argparse
@@ -52,21 +19,21 @@ ROOT = HERE.parent
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(HERE))
 
-from rcfjssp_core import parse                     # noqa: E402
-from rcfjssp_reference import CONFIG, TABLE10      # noqa: E402
-import maquina                                     # noqa: E402
+from rcfjssp_core import parse
+from rcfjssp_reference import CONFIG, TABLE10
+import maquina
 
 UP = ROOT / "instances" / "upstream" / "RCFJSSP-main" / "Experiment 4"
 OUT = ROOT / "results" / "final" / "heur_lns"
 STEMS = [f"lcbrtu_{n}" for n in range(10)]
 
-# Coluna Time (s) do ALNS-CP na Tabela 10 (conferida contra o texto em confere_t10).
+
 T_ALNS = {"lcbrtu_0": 623.45, "lcbrtu_1": 179.86, "lcbrtu_2": 476.44,
           "lcbrtu_3": 495.88, "lcbrtu_4": 604.69, "lcbrtu_5": 643.44,
           "lcbrtu_6": 231.97, "lcbrtu_7": 283.92, "lcbrtu_8": 800.39,
           "lcbrtu_9": 206.70}
 
-# Constantes por desenho (nao calibradas). Mudar qualquer uma muda o protocolo.
+
 P = dict(SUB_TIME=3.0, RHO0=0.30, RHO_MIN=0.10, RHO_MAX=0.60, RHO_STEP=1.15,
          CONSTR_FRAC=0.5, W_MIN=0.10, DECAY=0.9, VIZ=("janela", "maquinas",
          "material", "critica"))
@@ -83,9 +50,7 @@ def confere_t10() -> List[str]:
     return erros
 
 
-# ------------------------------------------------------------------ modelo
 def carrega(ref):
-    """ref = ("rcfjssp", stem) | ("fjssp"|"bjssp", arquivo). Devolve (inst, buffers_maq, spec)."""
     fam, nome = ref
     if fam == "rcfjssp":
         return parse(UP / f"{nome}.fjs"), True, CONFIG[("exp4", "all")]
@@ -105,7 +70,6 @@ def makespan(sch) -> int:
 
 
 def subproblema(inst, mb, inc, livres, teto, tempo, fios, semente):
-    """Resolve o subproblema exatamente; devolve (status, escalonamento|None)."""
     from ortools.sat.python import cp_model
     import modelo_reservatorio as mr
     mdl, st, en, rl, pr = mr.build(inst, mb)
@@ -152,7 +116,6 @@ def construcao(inst, mb, fios, limite, semente):
     return None
 
 
-# ------------------------------------------------------------- vizinhancas
 def viz_ops(nome, inst, sch, rho, rng) -> set:
     n = len(sch)
     alvo = max(4, int(rho * n))
@@ -178,7 +141,7 @@ def viz_ops(nome, inst, sch, rho, rng) -> set:
             if sum(1 for e in sch if e["job"] in jobs) >= alvo:
                 break
         return {e["op"] for e in sch if e["job"] in jobs}
-    # critica: volta do ultimo termino por relacoes sem folga (job ou maquina)
+
     by_op = {e["op"]: e for e in sch}
     pred_job = {}
     for o_k, o in enumerate(inst.operations):
@@ -203,16 +166,15 @@ def viz_ops(nome, inst, sch, rho, rng) -> set:
         for p in (pred_job.get(k), pred_maq.get(k)):
             if p is not None and by_op[p]["release"] >= s - 0:
                 fila.append(p)
-    if len(cad) < alvo:      # completa com vizinhos no tempo da cadeia
+    if len(cad) < alvo:
         resto = sorted((e for e in sch if e["op"] not in cad),
                        key=lambda e: -e["end"])
         cad |= {e["op"] for e in resto[: alvo - len(cad)]}
     return cad
 
 
-# ----------------------------------------------------------------- caminhante
 def caminhante(wid, ref, prazo, fios, semente, comp, trava, hist, prm):
-    # prm vem do processo pai: com 'spawn' o modulo e reimportado e P voltaria ao padrao
+
     inst, mb, _spec = carrega(ref)
     rng = random.Random(semente * 1000 + wid)
     rho = prm["RHO0"]
@@ -350,7 +312,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         print("Tempos da Tabela 10 nao conferem com o artigo:", erros)
         return 1
     maquina.exige_i7(a.qualquer_maquina)
-    P["VIZ"] = tuple(a.viz)          # entra no protocolo (e no hash) via P
+    P["VIZ"] = tuple(a.viz)
     cal = Path(a.calibracao)
     if cal.exists():
         escolha = json.loads(cal.read_text(encoding="utf-8"))
