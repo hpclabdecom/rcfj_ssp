@@ -25,7 +25,7 @@ them ran.
   methods, the matched comparison on the same platform, the same total thread allocation, the same budgets and
   ten seeds. Results of different computers are never pooled.
 * **Verification.** Every reported schedule was re-checked by the solver-free checker (`rcfjssp_audit.py`, checks
-  A–E), which reads only the instance and the stored schedule: 6 014 schedules in `results/`, none with a defect.
+  A–E), which reads only the instance and the stored schedule: 6 024 schedules in `results/`, none with a defect.
   Passing establishes feasibility and the reported makespan under the implemented semantics, not optimality.
 
 ## 2. Hardware and software
@@ -60,7 +60,7 @@ The folder catalogue with run counts and limits is in `results/README.md`. In sh
 | PT-W | `ptw_8x1` (all), `ptw_4x2` (i7), `ptw_16x1` (Ryzen, Xeon), `ptw_16x2` (Xeon) | all |
 | layout screens | `screen_ptw_8x1`, `_4x2` (i7, Ryzen); `screen_ptw_16x2`, `_32x1` (Xeon) | all |
 | contextual baselines | `reservatorio_w*_TALNS`, `relato_w*_1800`, `cpo_exp4*` | all |
-| controls of PT-W | `lns_8x1`, `ptw_8x1_PE_semtroca`, `_U_nucleo_uniforme`, `_F_escada_fixa`, `_C_cache_inicial`, `_PD_alpha0`, `_D_instrumentado`; `_FPD_escada_fixa_alpha0` | all (F, PD: i7 and Ryzen; F+PD: Ryzen, four open instances) |
+| controls of PT-W | `lns_8x1`, `ptw_8x1_PE_semtroca`, `_U_nucleo_uniforme`, `_F_escada_fixa`, `_C_cache_inicial`, `_PD_alpha0`, `_D_instrumentado`; `_FPD_escada_fixa_alpha0` | all (F, PD: i7 and Ryzen; F+PD: Ryzen, five open instances, exploratory) |
 | independent and scaled instances | `heldout_lns_4x2`, `heldout_ptw_8x1`, `heldout_ptw_4x2`, `heldout_mono_w8`; `escala10_lns_4x2`, `escala10_ptw_8x1` | all; ×10 on i7 and Ryzen |
 | sensitivity of the thermal controls | `sens_T_x05`, `sens_T_x2`, `sens_delta1_deriva3`, `sens_delta6_deriva10`, `sens_subhot2`, `sens_subhot8` | i7, Ryzen |
 
@@ -207,13 +207,15 @@ two-sided stratified permutation test. Per-instance tests in `results/TABLES.md`
 (p-values of the mean-difference-of-means test as printed in `results/TABLES.md`; win/tie/loss counts in
 parentheses.)
 
-**Combined control F+PD** (added after the pre-registered campaign; Ryzen only; the four instances without a proved
-optimum, `lcbrtu_0`, `_3`, `_5`, `_8`; seeds 1–10; `experimentos/CAMPANHA_FPD.bat`). The ladder is never adapted and
-α = 0 at the same time; exchanges, geometric ladder, Metropolis acceptance and slot-dependent kernels are unchanged.
-Effect on medians, control minus PT-W: +0.12 [−1.50, +1.62], p = 0.934 (2 / 1 / 1); mean of medians 354.38 (PT-W)
-against 354.50; per instance +0.0, +0.5, +2.0 and −2.0 on `lcbrtu_0`, `_3`, `_5`, `_8` (exact p = 0.462, 0.204, 0.038,
-0.170; none significant after Holm). By the pre-registered rule the result is inconclusive (the interval exceeds ±1
-on four instances); nothing separates the two configurations. Per-instance table in `results/TABLES.md`, Section 4.
+**Exploratory combined control F+PD** (not pre-registered; run after the pre-registered campaign; Ryzen only; the
+five benchmark instances whose best audited value is above the published lower bound, `lcbrtu_0`, `_3`, `_5`, `_7`,
+`_8`, the other five being solved to a proved optimum by every configuration; seeds 1–10;
+`experimentos/CAMPANHA_FPD.bat`). The ladder is never adapted and α = 0 at the same time; exchanges, geometric ladder,
+Metropolis acceptance and slot-dependent kernels are unchanged. Effect on medians, control minus PT-W:
++0.00 [−1.20, +1.30], p = 1.000 (2 / 1 / 2); mean of medians 340.70 in both arms; per instance −0.5, +0.5,
++2.0, 0 and −2.0 on `lcbrtu_0`, `_3`, `_5`, `_7`, `_8` (exact p = 0.264, 0.204, 0.038, –, 0.170; none significant after Holm;
+`lcbrtu_7` is 286 in all twenty runs). By the pre-registered rule the result is inconclusive: the interval is wider than the ±1 resolution,
+so the comparison neither detects a difference nor bounds one. Per-instance table in `results/TABLES.md`, Section 4.
 
 ## 9. Instrumented run and search diagnostics
 
@@ -228,12 +230,15 @@ makespans against PT-W 8×1 on the same seeds: i7 +0.80 [−0.80, +1.40], Ryzen 
 | Ryzen | 29 914 | 98.0 % | 1.5 % | 0.1 % | 0.5 % | 12 980 | 65.4 % | 0.00 % | 0.02 % |
 | Xeon | 31 505 | 98.3 % | 1.3 % | 0.1 % | 0.3 % | 13 655 | 66.3 % | 0.00 % | 0.01 % |
 
-**Per-slot activity of PT-W 8×1** (ten instances × ten seeds; proposals, acceptances, accepted deteriorations,
-subproblems without a solution and global improvements first found in each slot) is tabulated for the three
-platforms in `results/TABLES.md`, Section 8. On the i7, for example, slot 0 returned 8 721 proposals, accepted all of
+**Per-slot activity of PT-W 8×1** (ten instances × ten seeds; proposals, acceptances, accepted deteriorations and
+subproblems without a solution, indexed by the slot the replica occupied when the repair was configured, and global
+improvements indexed by the slot the replica occupied when the improvement was published; the two coordinates can
+differ for one repair because exchanges are asynchronous) is tabulated for the three platforms in
+`results/TABLES.md`, Section 8. On the i7, for example, slot 0 returned 8 721 proposals, accepted all of
 them (none a deterioration) and found 1 068 of the 2 854 global improvements; slot 7 returned 9 405 proposals, accepted
 979 deteriorations, had 3 006 subproblems without a solution and found 131 global improvements. Mean exchange
-acceptance per pair: 0.59 (i7), 0.65 (Ryzen), 0.66 (Xeon); mean round trips per replica: 0.47, 0.71, 0.80.
+acceptance per pair: 0.59 (i7), 0.65 (Ryzen), 0.66 (Xeon); mean end-to-end transitions (slot 0 to slot 7 or back)
+per replica: 0.47, 0.71, 0.80; mean complete round trips (⌊transitions / 2⌋) per replica: 0.08, 0.18, 0.22.
 
 ## 10. Independent instances (`instances/heldout`, fifteen instances, ten seeds, budget 4 s × operations)
 
@@ -321,7 +326,30 @@ are listed in `results/TABLES.md`, Section 11: `lcbrtu_0` 335, `lcbrtu_3` 368, `
 produced them; the `reservatorio_*` folders use the native-reservoir encoding, the others the validated pairwise
 encoding, and the solver logs of the exact runs are archived next to the results.
 
-## 13. Statistical procedures (as implemented in `experimentos/analise_campanhas.py`)
+## 13. Checks on the archive: strict cutoff, resource pressure, initial schedules
+
+**Strict time cutoff** (`results/TABLES.md`, Section 14). Of the 4 684 records with an improvement trajectory, 27
+logged their last improvement after the nominal budget (at most 0.3 s after it; the largest wall-clock excess of a run
+is 2.5 s; logged times are rounded to 0.1 s). Re-reading every trajectory with only the improvements logged within the
+budget leaves the matched 8-thread effects unchanged (+1.85, +2.50, +2.45), moves the 16-thread Ryzen effect from
++2.05 to +2.00, leaves the Xeon 16- and 32-thread effects and the same-geometry effects unchanged, and moves the
+independent-instance effects from +0.47 to +0.43 (i7, CI [−0.03, +1.07], p = 0.003) and from +1.03 to +1.00 (Ryzen);
+the Xeon value is unchanged (+1.43). The reported tables use the end-of-run values.
+
+**Resource pressure** (`results/TABLES.md`, Section 15). A conservative upper bound on simultaneous use (for a
+utility, the sum over machines of the largest consumption rate eligible on the machine; for a tool, the smaller of
+the number of jobs using it and the number of machines eligible for those operations) shows that all 17 utility and
+all 27 tool constraints of the ten benchmark instances, and all 27 utility and 32 of the 46 tool constraints of the
+15 independent instances, cannot bind in any schedule. The 14 tool constraints that escape the test belong to
+`rcfj_h_2`, `_3` and `_6`; the test does not establish that they bind. Buffers, material stocks and WIP limits are not
+covered by the test and remain active in every model.
+
+**Initial schedules** (`results/TABLES.md`, Section 16). TW-LNS and PT-W construct the initial schedule with the same
+procedure, but the parallel first-feasible search makes the realized schedule depend on timing: the initial
+objectives of the two runs with the same instance and seed coincide in 48 (i7), 31 (Ryzen) and 55 (Xeon) of the 100
+pairs. The comparison is therefore between complete procedures, construction included.
+
+## 14. Statistical procedures (as implemented in `experimentos/analise_campanhas.py`)
 
 * Per instance: exact two-sided Mann–Whitney U test with average ranks for ties and full enumeration of the
   assignments (C(20, 10) = 184 756 for ten seeds per side); omitted when all observations are equal; Holm correction
@@ -331,7 +359,10 @@ encoding, and the solver logs of the exact runs are archived next to the results
   fixed beforehand and two-sided for the controls and sensitivity arms; p = (c + 1)/(N + 1), where c counts the
   resamples at least as extreme as the observed statistic.
 * Effect sizes: mean over instances of the difference of medians and of the difference of means, each with a 95 %
-  confidence interval from a paired-by-instance bootstrap (10 000 resamples of the seeds within each instance,
-  percentile interval).
+  confidence interval from a bootstrap stratified by instance (10 000 resamples; within each instance the ten seeds
+  of each arm are resampled separately, the instance set is held fixed, and the resampled per-instance differences
+  are averaged; percentile interval). "Paired" refers to the pairing of the two arms within each instance, not to a
+  pairing of individual runs. The permutation p-value concerns the mean difference of means and the primary interval
+  the mean difference of medians, so the two can occasionally disagree, as for the i7 fixed-ladder control.
 * The win/tie/loss count of a comparison is defined from the two per-instance medians. Global p-values are reported
   separately for each comparison and are not adjusted across comparisons.

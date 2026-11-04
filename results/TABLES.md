@@ -544,24 +544,25 @@ Arm `xeon/ptw_8x1` against control `xeon/ptw_8x1_C_cache_inicial`. Effect = medi
 Instances with a better / equal / worse median in the arm: **2 / 7 / 1**. Mean difference of medians **+0.05** (95 % CI [-0.50, +0.65]); mean difference of means **-0.16** (95 % CI [-0.69, +0.34]); stratified permutation p = 0.601 (p = (c + 1)/(N + 1), N = 20000).
 Mean of medians: arm 320.45 vs control 320.50. Sum of the best values: arm 3192 vs control 3186.
 
-#### Combined control F+PD (fixed ladder and α = 0 together), Ryzen, four open instances, ten seeds
+#### Exploratory combined control F+PD (fixed ladder and α = 0 together), Ryzen, five open instances, ten seeds
 
-Run after the pre-registered campaign, with the same statistics, on the instances that are not solved to a proved optimum (`lcbrtu_0`, `_3`, `_5`, `_8`): exchanges, geometric ladder, Metropolis acceptance and slot-dependent kernels unchanged; the ladder is never adapted and the energy is the makespan.
+Not part of the pre-registered protocol: run afterwards, with the same statistics, on the five benchmark instances whose best audited value is above the published lower bound (`lcbrtu_0`, `_3`, `_5`, `_7`, `_8`; the other five are solved to a proved optimum by every configuration). Exchanges, geometric ladder, Metropolis acceptance and slot-dependent kernels unchanged; the ladder is never adapted and the energy is the makespan.
 
 
-#### AMD Ryzen 7 5700U: PT-W 8×1 vs F+PD (fixed ladder, α = 0), four open instances
+#### AMD Ryzen 7 5700U: PT-W 8×1 vs F+PD (fixed ladder, α = 0), five open instances
 
 Arm `ryzen/ptw_8x1` against control `ryzen/ptw_8x1_FPD_escada_fixa_alpha0`. Effect = median(control) − median(arm); positive = the arm is better. Exact Mann–Whitney per instance, Holm over the non-degenerate instances; stratified permutation test (two-sided); paired bootstrap 95 % CIs.
 
 | instance | arm best / median / mean | control best / median / mean | effect (median) | exact p | Holm p |
 |---|---|---|---:|---:|---:|
-| lcbrtu_0 | 336 / 337 / 338.2 (n=10) | 335 / 337 / 336.9 (n=10) | +0 | 0.462 | 0.511 |
+| lcbrtu_0 | 336 / 337 / 338.2 (n=10) | 335 / 336.5 / 336.6 (n=10) | -0.5 | 0.264 | 0.511 |
 | lcbrtu_3 | 371 / 374.5 / 374.0 (n=10) | 372 / 375 / 376.0 (n=10) | +0.5 | 0.204 | 0.511 |
 | lcbrtu_5 | 341 / 343.5 / 343.7 (n=10) | 343 / 345.5 / 345.5 (n=10) | +2 | 0.038 | 0.153 |
+| lcbrtu_7 | 286 / 286 / 286.0 (n=10) | 286 / 286 / 286.0 (n=10) | +0 | – | – |
 | lcbrtu_8 | 357 / 362.5 / 363.3 (n=10) | 359 / 360.5 / 361.1 (n=10) | -2 | 0.170 | 0.511 |
 
-Instances with a better / equal / worse median in the arm: **2 / 1 / 1**. Mean difference of medians **+0.12** (95 % CI [-1.50, +1.62]); mean difference of means **+0.08** (95 % CI [-0.98, +1.15]); stratified permutation p = 0.934 (p = (c + 1)/(N + 1), N = 20000).
-Mean of medians: arm 354.38 vs control 354.50. Sum of the best values: arm 1405 vs control 1409.
+Instances with a better / equal / worse median in the arm: **2 / 1 / 2**. Mean difference of medians **+0.00** (95 % CI [-1.20, +1.30]); mean difference of means **+0.00** (95 % CI [-0.82, +0.84]); stratified permutation p = 1.000 (p = (c + 1)/(N + 1), N = 20000).
+Mean of medians: arm 340.70 vs control 340.70. Sum of the best values: arm 1691 vs control 1695.
 
 ## 5. Independent instances (`instances/heldout`), ten seeds, budget 4 s × operations
 
@@ -1226,7 +1227,7 @@ Best cell of the window-only grid: SUB_TIME8.0_RHO00.25 (9.10 %). The pair used 
 
 ## 8. Search diagnostics from the PT-W 8×1 result files (ten seeds)
 
-Per slot, summed over the ten instances, ten seeds and the replicas that occupied the slot: proposals returned by the solver, accepted proposals, accepted deteriorations, subproblems without a solution, and global improvements (new best makespan) first found in the slot.
+Per slot, summed over the ten instances, ten seeds and the replicas that occupied the slot: proposals returned by the solver, accepted proposals, accepted deteriorations and subproblems without a solution are indexed by the slot the replica occupied when the repair was configured (entry slot); global improvements (new best makespan) are indexed by the slot the replica occupied when the improvement was published, which can differ from the entry slot because exchanges are asynchronous.
 
 
 #### Intel Core i7-2600
@@ -1242,7 +1243,7 @@ Per slot, summed over the ten instances, ten seeds and the replicas that occupie
 | 6 | 9324 | 8588 | 789 | 2754 | 153 |
 | 7 | 9405 | 8801 | 979 | 3006 | 131 |
 
-Exchange acceptance rate per pair, mean over runs: 0.592; round trips (replica visiting both ends of the ladder), mean per replica: 0.47.
+Exchange acceptance rate per pair, mean over runs: 0.592. End-to-end transitions (a replica passing from one extreme slot to the other), mean per replica: 0.47; complete round trips (⌊transitions / 2⌋), mean per replica: 0.08.
 
 #### AMD Ryzen 7 5700U
 
@@ -1257,7 +1258,7 @@ Exchange acceptance rate per pair, mean over runs: 0.592; round trips (replica v
 | 6 | 10952 | 10086 | 900 | 3048 | 160 |
 | 7 | 11017 | 10230 | 1042 | 3297 | 128 |
 
-Exchange acceptance rate per pair, mean over runs: 0.649; round trips (replica visiting both ends of the ladder), mean per replica: 0.71.
+Exchange acceptance rate per pair, mean over runs: 0.649. End-to-end transitions (a replica passing from one extreme slot to the other), mean per replica: 0.71; complete round trips (⌊transitions / 2⌋), mean per replica: 0.18.
 
 #### Intel Xeon E5-2696 v4
 
@@ -1272,7 +1273,7 @@ Exchange acceptance rate per pair, mean over runs: 0.649; round trips (replica v
 | 6 | 11202 | 10329 | 887 | 3098 | 172 |
 | 7 | 11416 | 10570 | 1066 | 3395 | 149 |
 
-Exchange acceptance rate per pair, mean over runs: 0.655; round trips (replica visiting both ends of the ladder), mean per replica: 0.80.
+Exchange acceptance rate per pair, mean over runs: 0.655. End-to-end transitions (a replica passing from one extreme slot to the other), mean per replica: 0.80; complete round trips (⌊transitions / 2⌋), mean per replica: 0.22.
 
 ## 9. Instrumented PT-W 8×1 (seeds 1–3): time shares and exchange bookkeeping
 
@@ -1491,3 +1492,336 @@ Rule fixed before running: a layout is retained if its median improves the TW-LN
 * **xeon, PT-W 32×1** against `xeon/heur_lns_janela_16x2` — lcbrtu_3: PT-W 369/373 vs TW-LNS 373/380.5 (effect +7.5); lcbrtu_5: PT-W 340/341 vs TW-LNS 341/350.5 (effect +9.5); lcbrtu_8: PT-W 359/359 vs TW-LNS 357/366 (effect +7) — retained.
 
 Xeon memory check before the 32-thread layouts: peak used memory 6.92 GB (limit 12.0 GB, `ok32` = True).
+
+## 14. Strict time cutoff: values restricted to improvements logged within the nominal budget
+
+Every record with a trajectory is re-read keeping only the improvements whose logged time (rounded to 0.1 s) is at or below the nominal budget; a run whose last improvement was logged after the budget keeps its best value before it. Folders without trajectories (whole-model solver runs) are unchanged.
+
+| folder | records with trajectory | records changed | largest excess of the last improvement (s) | largest wall-clock excess (s) |
+|---|---:|---:|---:|---:|
+| `i7/escala10_ptw_8x1` | 15 | 1 | 0.2 | 1.4 |
+| `i7/heldout_ptw_8x1` | 150 | 2 | 0.3 | 2.1 |
+| `i7/lns_8x1` | 100 | 1 | 0.2 | 0.9 |
+| `i7/ptw_8x1` | 100 | 1 | 0.2 | 1.5 |
+| `i7/ptw_8x1_F_escada_fixa` | 100 | 3 | 0.2 | 1.9 |
+| `i7/ptw_8x1_PE_semtroca` | 100 | 1 | 0.2 | 1.6 |
+| `i7/sens_T_x2` | 15 | 1 | 0.2 | 1.3 |
+| `i7/sens_delta1_deriva3` | 15 | 2 | 0.3 | 1.5 |
+| `ryzen/heldout_ptw_8x1` | 150 | 1 | 0.1 | 2.5 |
+| `ryzen/ptw_16x1` | 100 | 2 | 0.2 | 1.5 |
+| `ryzen/ptw_8x1_FPD_escada_fixa_alpha0` | 50 | 1 | 0.0 | 1.4 |
+| `ryzen/ptw_8x1_F_escada_fixa` | 100 | 1 | 0.1 | 1.4 |
+| `ryzen/ptw_8x1_PE_semtroca` | 100 | 1 | 0.1 | 2.0 |
+| `ryzen/ptw_8x1_U_nucleo_uniforme` | 100 | 1 | 0.1 | 1.4 |
+| `ryzen/screen_ptw_4x2` | 9 | 1 | 0.1 | 1.0 |
+| `ryzen/sens_T_x05` | 15 | 1 | 0.0 | 1.4 |
+| `xeon/heldout_ptw_4x2` | 150 | 1 | 0.1 | 1.4 |
+| `xeon/heldout_ptw_8x1` | 150 | 1 | 0.1 | 1.5 |
+| `xeon/ptw_16x2` | 100 | 1 | 0.0 | 1.6 |
+| `xeon/ptw_8x1` | 100 | 1 | 0.1 | 1.4 |
+| `xeon/ptw_8x1_U_nucleo_uniforme` | 100 | 1 | 0.1 | 1.4 |
+| `xeon/screen_ptw_16x2` | 9 | 1 | 0.1 | 1.5 |
+
+Records with a trajectory: 4684; records whose value changes under the strict cutoff: 27.
+
+The matched, same-geometry and independent-instance comparisons under the strict cutoff:
+
+
+#### i7: PT-W 8×1 vs TW-LNS 4×2 (eight threads), strict cutoff
+
+Arm `i7/ptw_8x1` against control `final/heur_lns_janela`. Effect = median(control) − median(arm); positive = the arm is better. Exact Mann–Whitney per instance, Holm over the non-degenerate instances; stratified permutation test (one-sided, direction: arm better); paired bootstrap 95 % CIs.
+
+| instance | arm best / median / mean | control best / median / mean | effect (median) | exact p | Holm p |
+|---|---|---|---:|---:|---:|
+| lcbrtu_0 | 335 / 338.5 / 338.8 (n=10) | 337 / 342.5 / 342.6 (n=10) | +4 | 0.022 | 0.154 |
+| lcbrtu_1 | 312 / 312 / 312.0 (n=10) | 312 / 312 / 312.2 (n=10) | +0 | 0.474 | 1.000 |
+| lcbrtu_2 | 277 / 277 / 277.0 (n=10) | 277 / 277 / 277.3 (n=10) | +0 | 1.000 | 1.000 |
+| lcbrtu_3 | 373 / 378 / 378.8 (n=10) | 373 / 382 / 381.3 (n=10) | +4 | 0.268 | 1.000 |
+| lcbrtu_4 | 312 / 312 / 312.0 (n=10) | 312 / 312 / 312.1 (n=10) | +0 | 1.000 | 1.000 |
+| lcbrtu_5 | 343 / 347 / 347.1 (n=10) | 344 / 351.5 / 350.7 (n=10) | +4.5 | 0.014 | 0.108 |
+| lcbrtu_6 | 296 / 296 / 296.0 (n=10) | 296 / 296.5 / 296.8 (n=10) | +0.5 | 0.033 | 0.195 |
+| lcbrtu_7 | 286 / 286 / 286.3 (n=10) | 286 / 286.5 / 286.8 (n=10) | +0.5 | 0.256 | 1.000 |
+| lcbrtu_8 | 358 / 363 / 362.4 (n=10) | 360 / 368 / 368.1 (n=10) | +5 | 0.003 | 0.030 |
+| lcbrtu_9 | 305 / 305 / 305.0 (n=10) | 305 / 305 / 305.0 (n=10) | +0 | – | – |
+
+Instances with a better / equal / worse median in the arm: **6 / 4 / 0**. Mean difference of medians **+1.85** (95 % CI [+0.90, +2.55]); mean difference of means **+1.75** (95 % CI [+1.12, +2.38]); stratified permutation p = <0.001 (p = (c + 1)/(N + 1), N = 20000).
+Mean of medians: arm 321.45 vs control 323.30. Sum of the best values: arm 3197 vs control 3202.
+
+#### Ryzen: PT-W 8×1 vs TW-LNS 4×2 (eight threads), strict cutoff
+
+Arm `ryzen/ptw_8x1` against control `ryzen/heur_lns_janela_4x2`. Effect = median(control) − median(arm); positive = the arm is better. Exact Mann–Whitney per instance, Holm over the non-degenerate instances; stratified permutation test (one-sided, direction: arm better); paired bootstrap 95 % CIs.
+
+| instance | arm best / median / mean | control best / median / mean | effect (median) | exact p | Holm p |
+|---|---|---|---:|---:|---:|
+| lcbrtu_0 | 336 / 337 / 338.2 (n=10) | 337 / 342.5 / 343.2 (n=10) | +5.5 | 0.011 | 0.054 |
+| lcbrtu_1 | 312 / 312 / 312.0 (n=10) | 312 / 312 / 312.3 (n=10) | +0 | 0.211 | 0.211 |
+| lcbrtu_2 | 277 / 277 / 277.0 (n=10) | 277 / 277 / 277.0 (n=10) | +0 | – | – |
+| lcbrtu_3 | 371 / 374.5 / 374.0 (n=10) | 376 / 381 / 380.8 (n=10) | +6.5 | <0.001 | <0.001 |
+| lcbrtu_4 | 312 / 312 / 312.0 (n=10) | 312 / 312 / 312.0 (n=10) | +0 | – | – |
+| lcbrtu_5 | 341 / 343.5 / 343.7 (n=10) | 343 / 348.5 / 348.9 (n=10) | +5 | 0.005 | 0.029 |
+| lcbrtu_6 | 296 / 296 / 296.0 (n=10) | 296 / 297.5 / 297.1 (n=10) | +1.5 | 0.011 | 0.054 |
+| lcbrtu_7 | 286 / 286 / 286.0 (n=10) | 286 / 286 / 286.7 (n=10) | +0 | 0.087 | 0.210 |
+| lcbrtu_8 | 357 / 362.5 / 363.3 (n=10) | 359 / 369 / 369.2 (n=10) | +6.5 | 0.070 | 0.210 |
+| lcbrtu_9 | 305 / 305 / 305.0 (n=10) | 305 / 305 / 305.0 (n=10) | +0 | – | – |
+
+Instances with a better / equal / worse median in the arm: **5 / 5 / 0**. Mean difference of medians **+2.50** (95 % CI [+1.35, +3.25]); mean difference of means **+2.50** (95 % CI [+1.76, +3.30]); stratified permutation p = <0.001 (p = (c + 1)/(N + 1), N = 20000).
+Mean of medians: arm 320.55 vs control 323.05. Sum of the best values: arm 3193 vs control 3203.
+
+#### Ryzen: PT-W 16×1 vs TW-LNS 8×2 (sixteen threads), strict cutoff
+
+Arm `ryzen/ptw_16x1` against control `ryzen/heur_lns_janela_8x2`. Effect = median(control) − median(arm); positive = the arm is better. Exact Mann–Whitney per instance, Holm over the non-degenerate instances; stratified permutation test (one-sided, direction: arm better); paired bootstrap 95 % CIs.
+
+| instance | arm best / median / mean | control best / median / mean | effect (median) | exact p | Holm p |
+|---|---|---|---:|---:|---:|
+| lcbrtu_0 | 336 / 338 / 338.8 (n=10) | 336 / 344.5 / 343.4 (n=10) | +6.5 | 0.008 | 0.050 |
+| lcbrtu_1 | 312 / 312 / 312.0 (n=10) | 312 / 312 / 312.1 (n=10) | +0 | 1.000 | 1.000 |
+| lcbrtu_2 | 277 / 277 / 277.0 (n=10) | 277 / 277 / 277.0 (n=10) | +0 | – | – |
+| lcbrtu_3 | 372 / 377.5 / 376.8 (n=10) | 370 / 381 / 380.3 (n=10) | +3.5 | 0.156 | 0.469 |
+| lcbrtu_4 | 312 / 312 / 312.0 (n=10) | 312 / 312 / 312.0 (n=10) | +0 | – | – |
+| lcbrtu_5 | 342 / 344 / 344.5 (n=10) | 343 / 349 / 351.3 (n=10) | +5 | 0.004 | 0.029 |
+| lcbrtu_6 | 296 / 296 / 296.0 (n=10) | 296 / 296 / 296.6 (n=10) | +0 | 0.087 | 0.433 |
+| lcbrtu_7 | 286 / 286 / 286.0 (n=10) | 286 / 286 / 286.5 (n=10) | +0 | 0.087 | 0.433 |
+| lcbrtu_8 | 360 / 362.5 / 363.8 (n=10) | 360 / 367.5 / 368.1 (n=10) | +5 | 0.245 | 0.489 |
+| lcbrtu_9 | 305 / 305 / 305.0 (n=10) | 305 / 305 / 305.0 (n=10) | +0 | – | – |
+
+Instances with a better / equal / worse median in the arm: **4 / 6 / 0**. Mean difference of medians **+2.00** (95 % CI [+0.80, +3.25]); mean difference of means **+2.04** (95 % CI [+1.21, +2.90]); stratified permutation p = <0.001 (p = (c + 1)/(N + 1), N = 20000).
+Mean of medians: arm 321.00 vs control 323.00. Sum of the best values: arm 3198 vs control 3197.
+
+#### Xeon: PT-W 8×1 vs TW-LNS 4×2 (eight threads), strict cutoff
+
+Arm `xeon/ptw_8x1` against control `xeon/heur_lns_janela_4x2`. Effect = median(control) − median(arm); positive = the arm is better. Exact Mann–Whitney per instance, Holm over the non-degenerate instances; stratified permutation test (one-sided, direction: arm better); paired bootstrap 95 % CIs.
+
+| instance | arm best / median / mean | control best / median / mean | effect (median) | exact p | Holm p |
+|---|---|---|---:|---:|---:|
+| lcbrtu_0 | 337 / 337.5 / 338.0 (n=10) | 335 / 340.5 / 341.9 (n=10) | +3 | 0.010 | 0.048 |
+| lcbrtu_1 | 312 / 312 / 312.0 (n=10) | 312 / 312.5 / 312.5 (n=10) | +0.5 | 0.033 | 0.098 |
+| lcbrtu_2 | 277 / 277 / 277.0 (n=10) | 277 / 277 / 277.0 (n=10) | +0 | – | – |
+| lcbrtu_3 | 372 / 375.5 / 375.4 (n=10) | 371 / 382 / 382.6 (n=10) | +6.5 | 0.005 | 0.028 |
+| lcbrtu_4 | 312 / 312 / 312.0 (n=10) | 312 / 312 / 312.0 (n=10) | +0 | – | – |
+| lcbrtu_5 | 339 / 344 / 343.9 (n=10) | 346 / 350.5 / 351.9 (n=10) | +6.5 | <0.001 | 0.002 |
+| lcbrtu_6 | 296 / 296 / 296.0 (n=10) | 296 / 296.5 / 296.9 (n=10) | +0.5 | 0.033 | 0.098 |
+| lcbrtu_7 | 286 / 286 / 286.0 (n=10) | 286 / 286 / 286.2 (n=10) | +0 | 0.474 | 0.474 |
+| lcbrtu_8 | 356 / 359.5 / 361.2 (n=10) | 358 / 367 / 368.4 (n=10) | +7.5 | 0.019 | 0.077 |
+| lcbrtu_9 | 305 / 305 / 305.0 (n=10) | 305 / 305 / 305.0 (n=10) | +0 | – | – |
+
+Instances with a better / equal / worse median in the arm: **6 / 4 / 0**. Mean difference of medians **+2.45** (95 % CI [+1.75, +3.60]); mean difference of means **+2.79** (95 % CI [+1.95, +3.65]); stratified permutation p = <0.001 (p = (c + 1)/(N + 1), N = 20000).
+Mean of medians: arm 320.45 vs control 322.90. Sum of the best values: arm 3192 vs control 3198.
+
+#### Xeon: PT-W 16×1 vs TW-LNS 8×2 (sixteen threads), strict cutoff
+
+Arm `xeon/ptw_16x1` against control `xeon/heur_lns_janela_8x2`. Effect = median(control) − median(arm); positive = the arm is better. Exact Mann–Whitney per instance, Holm over the non-degenerate instances; stratified permutation test (one-sided, direction: arm better); paired bootstrap 95 % CIs.
+
+| instance | arm best / median / mean | control best / median / mean | effect (median) | exact p | Holm p |
+|---|---|---|---:|---:|---:|
+| lcbrtu_0 | 336 / 337 / 336.9 (n=10) | 339 / 343 / 342.8 (n=10) | +6 | <0.001 | <0.001 |
+| lcbrtu_1 | 312 / 312 / 312.0 (n=10) | 312 / 312 / 312.2 (n=10) | +0 | 0.474 | 0.947 |
+| lcbrtu_2 | 277 / 277 / 277.0 (n=10) | 277 / 277 / 277.0 (n=10) | +0 | – | – |
+| lcbrtu_3 | 370 / 373 / 372.8 (n=10) | 375 / 379 / 380.4 (n=10) | +6 | <0.001 | <0.001 |
+| lcbrtu_4 | 312 / 312 / 312.0 (n=10) | 312 / 312 / 312.0 (n=10) | +0 | – | – |
+| lcbrtu_5 | 338 / 341.5 / 341.6 (n=10) | 342 / 345 / 345.4 (n=10) | +3.5 | 0.010 | 0.051 |
+| lcbrtu_6 | 296 / 296 / 296.0 (n=10) | 296 / 296 / 296.7 (n=10) | +0 | 0.087 | 0.260 |
+| lcbrtu_7 | 286 / 286 / 286.0 (n=10) | 286 / 286 / 286.2 (n=10) | +0 | 0.474 | 0.947 |
+| lcbrtu_8 | 356 / 359 / 358.8 (n=10) | 357 / 366 / 366.8 (n=10) | +7 | 0.023 | 0.093 |
+| lcbrtu_9 | 305 / 305 / 305.0 (n=10) | 305 / 305 / 305.0 (n=10) | +0 | – | – |
+
+Instances with a better / equal / worse median in the arm: **4 / 6 / 0**. Mean difference of medians **+2.25** (95 % CI [+1.45, +3.30]); mean difference of means **+2.64** (95 % CI [+2.02, +3.29]); stratified permutation p = <0.001 (p = (c + 1)/(N + 1), N = 20000).
+Mean of medians: arm 319.85 vs control 322.10. Sum of the best values: arm 3188 vs control 3201.
+
+#### Xeon: PT-W 16×2 vs TW-LNS 16×2 (thirty-two threads), strict cutoff
+
+Arm `xeon/ptw_16x2` against control `xeon/heur_lns_janela_16x2`. Effect = median(control) − median(arm); positive = the arm is better. Exact Mann–Whitney per instance, Holm over the non-degenerate instances; stratified permutation test (one-sided, direction: arm better); paired bootstrap 95 % CIs.
+
+| instance | arm best / median / mean | control best / median / mean | effect (median) | exact p | Holm p |
+|---|---|---|---:|---:|---:|
+| lcbrtu_0 | 335 / 336 / 336.4 (n=10) | 337 / 340.5 / 341.0 (n=10) | +4.5 | <0.001 | <0.001 |
+| lcbrtu_1 | 312 / 312 / 312.0 (n=10) | 312 / 312 / 312.0 (n=10) | +0 | – | – |
+| lcbrtu_2 | 277 / 277 / 277.0 (n=10) | 277 / 277 / 277.0 (n=10) | +0 | – | – |
+| lcbrtu_3 | 369 / 372.5 / 372.7 (n=10) | 373 / 380.5 / 380.1 (n=10) | +8 | <0.001 | 0.003 |
+| lcbrtu_4 | 312 / 312 / 312.0 (n=10) | 312 / 312 / 312.0 (n=10) | +0 | – | – |
+| lcbrtu_5 | 341 / 344.5 / 344.3 (n=10) | 341 / 350.5 / 349.0 (n=10) | +6 | 0.127 | 0.299 |
+| lcbrtu_6 | 296 / 296 / 296.0 (n=10) | 296 / 297.5 / 297.3 (n=10) | +1.5 | <0.001 | 0.003 |
+| lcbrtu_7 | 286 / 286 / 286.2 (n=10) | 286 / 287 / 286.7 (n=10) | +1 | 0.132 | 0.299 |
+| lcbrtu_8 | 358 / 360 / 361.8 (n=10) | 357 / 366 / 366.3 (n=10) | +6 | 0.100 | 0.299 |
+| lcbrtu_9 | 305 / 305 / 305.0 (n=10) | 305 / 305 / 305.0 (n=10) | +0 | – | – |
+
+Instances with a better / equal / worse median in the arm: **6 / 4 / 0**. Mean difference of medians **+2.70** (95 % CI [+1.45, +3.35]); mean difference of means **+2.30** (95 % CI [+1.60, +2.99]); stratified permutation p = <0.001 (p = (c + 1)/(N + 1), N = 20000).
+Mean of medians: arm 320.10 vs control 322.80. Sum of the best values: arm 3191 vs control 3196.
+
+#### Intel Core i7-2600: PT-W 8×1 vs TW-LNS 8×1, strict cutoff
+
+Arm `i7/ptw_8x1` against control `i7/lns_8x1`. Effect = median(control) − median(arm); positive = the arm is better. Exact Mann–Whitney per instance, Holm over the non-degenerate instances; stratified permutation test (one-sided, direction: arm better); paired bootstrap 95 % CIs.
+
+| instance | arm best / median / mean | control best / median / mean | effect (median) | exact p | Holm p |
+|---|---|---|---:|---:|---:|
+| lcbrtu_0 | 335 / 338.5 / 338.8 (n=10) | 337 / 345 / 344.5 (n=10) | +6.5 | 0.005 | 0.033 |
+| lcbrtu_1 | 312 / 312 / 312.0 (n=10) | 312 / 312 / 312.1 (n=10) | +0 | 1.000 | 1.000 |
+| lcbrtu_2 | 277 / 277 / 277.0 (n=10) | 277 / 277 / 277.5 (n=10) | +0 | 0.474 | 0.947 |
+| lcbrtu_3 | 373 / 378 / 378.8 (n=10) | 378 / 383.5 / 386.1 (n=10) | +5.5 | 0.015 | 0.060 |
+| lcbrtu_4 | 312 / 312 / 312.0 (n=10) | 312 / 312 / 312.0 (n=10) | +0 | – | – |
+| lcbrtu_5 | 343 / 347 / 347.1 (n=10) | 349 / 353.5 / 354.7 (n=10) | +6.5 | <0.001 | <0.001 |
+| lcbrtu_6 | 296 / 296 / 296.0 (n=10) | 296 / 297.5 / 297.1 (n=10) | +1.5 | 0.011 | 0.054 |
+| lcbrtu_7 | 286 / 286 / 286.3 (n=10) | 286 / 287 / 287.0 (n=10) | +1 | 0.095 | 0.284 |
+| lcbrtu_8 | 358 / 363 / 362.4 (n=10) | 364 / 372.5 / 373.4 (n=10) | +9.5 | <0.001 | 0.002 |
+| lcbrtu_9 | 305 / 305 / 305.0 (n=10) | 305 / 305 / 305.0 (n=10) | +0 | – | – |
+
+Instances with a better / equal / worse median in the arm: **6 / 4 / 0**. Mean difference of medians **+3.05** (95 % CI [+2.00, +4.50]); mean difference of means **+3.40** (95 % CI [+2.57, +4.27]); stratified permutation p = <0.001 (p = (c + 1)/(N + 1), N = 20000).
+Mean of medians: arm 321.45 vs control 324.50. Sum of the best values: arm 3197 vs control 3216.
+
+#### AMD Ryzen 7 5700U: PT-W 8×1 vs TW-LNS 8×1, strict cutoff
+
+Arm `ryzen/ptw_8x1` against control `ryzen/lns_8x1`. Effect = median(control) − median(arm); positive = the arm is better. Exact Mann–Whitney per instance, Holm over the non-degenerate instances; stratified permutation test (one-sided, direction: arm better); paired bootstrap 95 % CIs.
+
+| instance | arm best / median / mean | control best / median / mean | effect (median) | exact p | Holm p |
+|---|---|---|---:|---:|---:|
+| lcbrtu_0 | 336 / 337 / 338.2 (n=10) | 339 / 344.5 / 346.6 (n=10) | +7.5 | <0.001 | 0.005 |
+| lcbrtu_1 | 312 / 312 / 312.0 (n=10) | 312 / 312 / 312.1 (n=10) | +0 | 1.000 | 1.000 |
+| lcbrtu_2 | 277 / 277 / 277.0 (n=10) | 277 / 277 / 277.0 (n=10) | +0 | – | – |
+| lcbrtu_3 | 371 / 374.5 / 374.0 (n=10) | 373 / 378.5 / 379.9 (n=10) | +4 | 0.004 | 0.017 |
+| lcbrtu_4 | 312 / 312 / 312.0 (n=10) | 312 / 312 / 312.0 (n=10) | +0 | – | – |
+| lcbrtu_5 | 341 / 343.5 / 343.7 (n=10) | 345 / 351 / 353.4 (n=10) | +7.5 | <0.001 | <0.001 |
+| lcbrtu_6 | 296 / 296 / 296.0 (n=10) | 296 / 297 / 297.1 (n=10) | +1 | 0.003 | 0.015 |
+| lcbrtu_7 | 286 / 286 / 286.0 (n=10) | 286 / 286 / 286.3 (n=10) | +0 | 0.211 | 0.632 |
+| lcbrtu_8 | 357 / 362.5 / 363.3 (n=10) | 360 / 365 / 366.8 (n=10) | +2.5 | 0.319 | 0.638 |
+| lcbrtu_9 | 305 / 305 / 305.0 (n=10) | 305 / 305 / 305.0 (n=10) | +0 | – | – |
+
+Instances with a better / equal / worse median in the arm: **5 / 5 / 0**. Mean difference of medians **+2.25** (95 % CI [+1.45, +3.60]); mean difference of means **+2.90** (95 % CI [+2.07, +3.79]); stratified permutation p = <0.001 (p = (c + 1)/(N + 1), N = 20000).
+Mean of medians: arm 320.55 vs control 322.80. Sum of the best values: arm 3193 vs control 3205.
+
+#### Intel Xeon E5-2696 v4: PT-W 8×1 vs TW-LNS 8×1, strict cutoff
+
+Arm `xeon/ptw_8x1` against control `xeon/lns_8x1`. Effect = median(control) − median(arm); positive = the arm is better. Exact Mann–Whitney per instance, Holm over the non-degenerate instances; stratified permutation test (one-sided, direction: arm better); paired bootstrap 95 % CIs.
+
+| instance | arm best / median / mean | control best / median / mean | effect (median) | exact p | Holm p |
+|---|---|---|---:|---:|---:|
+| lcbrtu_0 | 337 / 337.5 / 338.0 (n=10) | 340 / 344 / 343.9 (n=10) | +6.5 | <0.001 | <0.001 |
+| lcbrtu_1 | 312 / 312 / 312.0 (n=10) | 312 / 312 / 312.1 (n=10) | +0 | 1.000 | 1.000 |
+| lcbrtu_2 | 277 / 277 / 277.0 (n=10) | 277 / 277 / 277.0 (n=10) | +0 | – | – |
+| lcbrtu_3 | 372 / 375.5 / 375.4 (n=10) | 372 / 380.5 / 379.8 (n=10) | +5 | 0.037 | 0.149 |
+| lcbrtu_4 | 312 / 312 / 312.0 (n=10) | 312 / 312 / 312.0 (n=10) | +0 | – | – |
+| lcbrtu_5 | 339 / 344 / 343.9 (n=10) | 345 / 349.5 / 350.4 (n=10) | +5.5 | <0.001 | 0.001 |
+| lcbrtu_6 | 296 / 296 / 296.0 (n=10) | 296 / 296 / 296.5 (n=10) | +0 | 0.211 | 0.632 |
+| lcbrtu_7 | 286 / 286 / 286.0 (n=10) | 286 / 286 / 286.3 (n=10) | +0 | 0.211 | 0.632 |
+| lcbrtu_8 | 356 / 359.5 / 361.2 (n=10) | 362 / 367.5 / 370.2 (n=10) | +8 | 0.003 | 0.015 |
+| lcbrtu_9 | 305 / 305 / 305.0 (n=10) | 305 / 305 / 305.0 (n=10) | +0 | – | – |
+
+Instances with a better / equal / worse median in the arm: **4 / 6 / 0**. Mean difference of medians **+2.50** (95 % CI [+1.75, +3.85]); mean difference of means **+2.67** (95 % CI [+1.93, +3.39]); stratified permutation p = <0.001 (p = (c + 1)/(N + 1), N = 20000).
+Mean of medians: arm 320.45 vs control 322.95. Sum of the best values: arm 3192 vs control 3207.
+
+#### Intel Core i7-2600, fifteen independent instances: PT-W 8×1 vs TW-LNS 4×2, strict cutoff
+
+Arm `i7/heldout_ptw_8x1` against control `i7/heldout_lns_4x2`. Effect = median(control) − median(arm); positive = the arm is better. Exact Mann–Whitney per instance, Holm over the non-degenerate instances; stratified permutation test (one-sided, direction: arm better); paired bootstrap 95 % CIs.
+
+| instance | arm best / median / mean | control best / median / mean | effect (median) | exact p | Holm p |
+|---|---|---|---:|---:|---:|
+| rcfj_h_0 | 314 / 317 / 316.1 (n=10) | 315 / 321.5 / 321.0 (n=10) | +4.5 | 0.001 | 0.015 |
+| rcfj_h_1 | 307 / 308 / 307.8 (n=10) | 307 / 310 / 310.0 (n=10) | +2 | 0.003 | 0.028 |
+| rcfj_h_2 | 300 / 300 / 300.2 (n=10) | 299 / 302 / 301.5 (n=10) | +2 | 0.023 | 0.158 |
+| rcfj_h_3 | 260 / 260 / 260.0 (n=10) | 260 / 260 / 260.0 (n=10) | +0 | – | – |
+| rcfj_h_4 | 292 / 292 / 292.0 (n=10) | 292 / 292 / 292.0 (n=10) | +0 | – | – |
+| rcfj_h_5 | 317 / 317 / 317.5 (n=10) | 317 / 318.5 / 318.9 (n=10) | +1.5 | 0.040 | 0.239 |
+| rcfj_h_6 | 287 / 287 / 287.0 (n=10) | 287 / 287 / 287.0 (n=10) | +0 | – | – |
+| rcfj_h_7 | 319 / 319 / 319.0 (n=10) | 319 / 320 / 320.7 (n=10) | +1 | <0.001 | 0.008 |
+| rcfj_h_8 | 308 / 308 / 308.0 (n=10) | 308 / 308 / 308.0 (n=10) | +0 | – | – |
+| rcfj_h_9 | 315 / 315 / 315.0 (n=10) | 315 / 315 / 315.1 (n=10) | +0 | 1.000 | 1.000 |
+| rcfj_hl_0 | 326 / 327.5 / 328.8 (n=10) | 320 / 323.5 / 324.7 (n=10) | -4 | 0.017 | 0.139 |
+| rcfj_hl_1 | 301 / 305 / 304.8 (n=10) | 300 / 304 / 305.3 (n=10) | -1 | 0.866 | 1.000 |
+| rcfj_hl_2 | 320 / 325 / 325.1 (n=10) | 324 / 326 / 326.6 (n=10) | +1 | 0.534 | 1.000 |
+| rcfj_hl_3 | 293 / 299.5 / 298.0 (n=10) | 295 / 297 / 297.7 (n=10) | -2.5 | 0.696 | 1.000 |
+| rcfj_hl_4 | 308 / 309 / 309.5 (n=10) | 308 / 311 / 310.6 (n=10) | +2 | 0.212 | 1.000 |
+
+Instances with a better / equal / worse median in the arm: **7 / 5 / 3**. Mean difference of medians **+0.43** (95 % CI [-0.03, +1.07]); mean difference of means **+0.69** (95 % CI [+0.27, +1.11]); stratified permutation p = 0.003 (p = (c + 1)/(N + 1), N = 20000).
+Mean of medians: arm 305.93 vs control 306.37. Sum of the best values: arm 4567 vs control 4566.
+
+#### AMD Ryzen 7 5700U, fifteen independent instances: PT-W 8×1 vs TW-LNS 4×2, strict cutoff
+
+Arm `ryzen/heldout_ptw_8x1` against control `ryzen/heldout_lns_4x2`. Effect = median(control) − median(arm); positive = the arm is better. Exact Mann–Whitney per instance, Holm over the non-degenerate instances; stratified permutation test (one-sided, direction: arm better); paired bootstrap 95 % CIs.
+
+| instance | arm best / median / mean | control best / median / mean | effect (median) | exact p | Holm p |
+|---|---|---|---:|---:|---:|
+| rcfj_h_0 | 314 / 316 / 315.6 (n=10) | 315 / 320 / 320.3 (n=10) | +4 | 0.002 | 0.017 |
+| rcfj_h_1 | 306 / 307 / 307.2 (n=10) | 307 / 308 / 308.2 (n=10) | +1 | 0.024 | 0.218 |
+| rcfj_h_2 | 299 / 300 / 299.6 (n=10) | 299 / 300 / 300.7 (n=10) | +0 | 0.044 | 0.310 |
+| rcfj_h_3 | 260 / 260 / 260.0 (n=10) | 260 / 260 / 260.0 (n=10) | +0 | – | – |
+| rcfj_h_4 | 292 / 292 / 292.0 (n=10) | 292 / 292 / 292.2 (n=10) | +0 | 1.000 | 1.000 |
+| rcfj_h_5 | 317 / 317 / 317.2 (n=10) | 317 / 318 / 318.5 (n=10) | +1 | 0.071 | 0.427 |
+| rcfj_h_6 | 287 / 287 / 287.0 (n=10) | 287 / 287 / 287.0 (n=10) | +0 | – | – |
+| rcfj_h_7 | 319 / 319 / 319.0 (n=10) | 319 / 319 / 319.5 (n=10) | +0 | 0.087 | 0.433 |
+| rcfj_h_8 | 308 / 308 / 308.0 (n=10) | 308 / 308 / 308.0 (n=10) | +0 | – | – |
+| rcfj_h_9 | 315 / 315 / 315.0 (n=10) | 315 / 315 / 315.1 (n=10) | +0 | 1.000 | 1.000 |
+| rcfj_hl_0 | 315 / 321 / 320.6 (n=10) | 315 / 323 / 324.1 (n=10) | +2 | 0.136 | 0.544 |
+| rcfj_hl_1 | 300 / 302 / 302.1 (n=10) | 300 / 302.5 / 303.5 (n=10) | +0.5 | 0.376 | 1.000 |
+| rcfj_hl_2 | 320 / 323 / 323.0 (n=10) | 321 / 326 / 326.1 (n=10) | +3 | 0.007 | 0.069 |
+| rcfj_hl_3 | 293 / 294.5 / 294.3 (n=10) | 295 / 297.5 / 297.8 (n=10) | +3 | 0.001 | 0.017 |
+| rcfj_hl_4 | 308 / 308 / 308.0 (n=10) | 308 / 308.5 / 309.7 (n=10) | +0.5 | 0.033 | 0.260 |
+
+Instances with a better / equal / worse median in the arm: **8 / 7 / 0**. Mean difference of medians **+1.00** (95 % CI [+0.70, +1.80]); mean difference of means **+1.47** (95 % CI [+1.08, +1.89]); stratified permutation p = <0.001 (p = (c + 1)/(N + 1), N = 20000).
+Mean of medians: arm 304.63 vs control 305.63. Sum of the best values: arm 4553 vs control 4558.
+
+#### Intel Xeon E5-2696 v4, fifteen independent instances: PT-W 8×1 vs TW-LNS 4×2, strict cutoff
+
+Arm `xeon/heldout_ptw_8x1` against control `xeon/heldout_lns_4x2`. Effect = median(control) − median(arm); positive = the arm is better. Exact Mann–Whitney per instance, Holm over the non-degenerate instances; stratified permutation test (one-sided, direction: arm better); paired bootstrap 95 % CIs.
+
+| instance | arm best / median / mean | control best / median / mean | effect (median) | exact p | Holm p |
+|---|---|---|---:|---:|---:|
+| rcfj_h_0 | 314 / 314 / 314.0 (n=10) | 314 / 319 / 318.1 (n=10) | +5 | <0.001 | 0.008 |
+| rcfj_h_1 | 306 / 307 / 307.2 (n=10) | 306 / 308 / 308.2 (n=10) | +1 | 0.073 | 0.293 |
+| rcfj_h_2 | 299 / 299 / 299.4 (n=10) | 300 / 301 / 301.1 (n=10) | +2 | 0.001 | 0.011 |
+| rcfj_h_3 | 260 / 260 / 260.0 (n=10) | 260 / 260 / 260.0 (n=10) | +0 | – | – |
+| rcfj_h_4 | 292 / 292 / 292.0 (n=10) | 292 / 292 / 292.0 (n=10) | +0 | – | – |
+| rcfj_h_5 | 317 / 317 / 317.3 (n=10) | 317 / 318 / 318.3 (n=10) | +1 | 0.005 | 0.033 |
+| rcfj_h_6 | 287 / 287 / 287.0 (n=10) | 287 / 287 / 287.1 (n=10) | +0 | 1.000 | 1.000 |
+| rcfj_h_7 | 319 / 319 / 319.0 (n=10) | 319 / 320 / 320.0 (n=10) | +1 | <0.001 | 0.008 |
+| rcfj_h_8 | 308 / 308 / 308.0 (n=10) | 308 / 308 / 308.0 (n=10) | +0 | – | – |
+| rcfj_h_9 | 315 / 315 / 315.0 (n=10) | 315 / 315 / 315.0 (n=10) | +0 | – | – |
+| rcfj_hl_0 | 316 / 318.5 / 319.0 (n=10) | 318 / 320.5 / 321.4 (n=10) | +2 | 0.075 | 0.293 |
+| rcfj_hl_1 | 300 / 301.5 / 301.7 (n=10) | 301 / 305 / 305.8 (n=10) | +3.5 | <0.001 | 0.008 |
+| rcfj_hl_2 | 320 / 321 / 321.1 (n=10) | 320 / 324 / 324.3 (n=10) | +3 | 0.014 | 0.070 |
+| rcfj_hl_3 | 293 / 294 / 294.2 (n=10) | 294 / 297 / 296.8 (n=10) | +3 | 0.003 | 0.018 |
+| rcfj_hl_4 | 308 / 308 / 308.6 (n=10) | 308 / 308 / 309.2 (n=10) | +0 | 0.536 | 1.000 |
+
+Instances with a better / equal / worse median in the arm: **9 / 6 / 0**. Mean difference of medians **+1.43** (95 % CI [+1.00, +1.83]); mean difference of means **+1.45** (95 % CI [+1.14, +1.76]); stratified permutation p = <0.001 (p = (c + 1)/(N + 1), N = 20000).
+Mean of medians: arm 304.07 vs control 305.50. Sum of the best values: arm 4554 vs control 4559.
+
+## 15. Resource pressure: conservative bounds on simultaneous tool and utility use
+
+For a utility, the bound is the sum over machines of the largest consumption rate of that utility among the operations and modes eligible on the machine; a machine processes one operation at a time, so the simultaneous use cannot exceed it. For a tool, the bound is the smaller of the number of jobs with an operation that uses the tool and the number of machines eligible for those operations; a job has one operation in process at a time. A constraint whose bound does not exceed its capacity cannot bind in any schedule (redundant). The test says nothing about a constraint whose bound exceeds the capacity, and it does not cover buffers, material stocks or WIP limits, which remain active in every model.
+
+| instance | operations | utilities: redundant / total | largest utility bound / capacity | tools: redundant / total | largest tool bound / capacity |
+|---|---:|---:|---:|---:|---:|
+| lcbrtu_0 | 136 | 2 / 2 | 25 / 80 | 4 / 4 | 5 / 7 |
+| lcbrtu_1 | 105 | 1 / 1 | 35 / 100 | 1 / 1 | 7 / 27 |
+| lcbrtu_2 | 99 | 1 / 1 | 31 / 100 | 3 / 3 | 7 / 8 |
+| lcbrtu_3 | 156 | 3 / 3 | 26 / 90 | 1 / 1 | 6 / 39 |
+| lcbrtu_4 | 101 | 1 / 1 | 23 / 80 | 2 / 2 | 5 / 11 |
+| lcbrtu_5 | 143 | 3 / 3 | 27 / 90 | 5 / 5 | 5 / 7 |
+| lcbrtu_6 | 108 | 2 / 2 | 45 / 80 | 1 / 1 | 9 / 27 |
+| lcbrtu_7 | 99 | 1 / 1 | 33 / 90 | 4 / 4 | 6 / 6 |
+| lcbrtu_8 | 146 | 1 / 1 | 24 / 80 | 3 / 3 | 5 / 11 |
+| lcbrtu_9 | 98 | 2 / 2 | 25 / 90 | 3 / 3 | 5 / 8 |
+| rcfj_h_0 | 139 | 1 / 1 | 25 / 90 | 4 / 4 | 5 / 8 |
+| rcfj_h_1 | 148 | 2 / 2 | 30 / 80 | 1 / 1 | 6 / 37 |
+| rcfj_h_2 | 147 | 2 / 2 | 40 / 90 | 1 / 5 | 8 / 6 |
+| rcfj_h_3 | 107 | 1 / 1 | 45 / 100 | 0 / 5 | 9 / 5 |
+| rcfj_h_4 | 123 | 1 / 1 | 40 / 90 | 1 / 1 | 8 / 31 |
+| rcfj_h_5 | 129 | 1 / 1 | 25 / 90 | 5 / 5 | 5 / 5 |
+| rcfj_h_6 | 111 | 2 / 2 | 40 / 100 | 0 / 5 | 8 / 4 |
+| rcfj_h_7 | 155 | 1 / 1 | 35 / 100 | 1 / 1 | 7 / 39 |
+| rcfj_h_8 | 115 | 1 / 1 | 45 / 100 | 1 / 1 | 9 / 29 |
+| rcfj_h_9 | 126 | 2 / 2 | 45 / 90 | 3 / 3 | 9 / 10 |
+| rcfj_hl_0 | 232 | 1 / 1 | 40 / 90 | 5 / 5 | 8 / 9 |
+| rcfj_hl_1 | 208 | 3 / 3 | 45 / 80 | 2 / 2 | 9 / 24 |
+| rcfj_hl_2 | 203 | 3 / 3 | 45 / 80 | 2 / 2 | 9 / 24 |
+| rcfj_hl_3 | 207 | 3 / 3 | 55 / 100 | 4 / 4 | 11 / 11 |
+| rcfj_hl_4 | 204 | 3 / 3 | 50 / 90 | 2 / 2 | 10 / 25 |
+
+Redundant by these bounds: 44 of 44 utility constraints and 59 of 73 tool constraints; instances in which every tool and utility constraint is redundant: 22 of 25.
+
+## 16. Initial schedules of the matched runs (same instance and seed)
+
+The first trajectory entry of each run is the constructed schedule. Both methods construct with the same procedure, but the parallel first-feasible search makes the realized schedule depend on timing, so the initial objectives of a PT-W run and of the TW-LNS run with the same seed need not coincide.
+
+| platform | pairs | identical initial objective | mean initial objective TW-LNS / PT-W | mean construction time (s) TW-LNS / PT-W |
+|---|---:|---:|---:|---:|
+| i7 | 100 | 48 | 905.9 / 871.4 | 9.7 / 9.1 |
+| ryzen | 100 | 31 | 877.1 / 847.0 | 5.7 / 5.5 |
+| xeon | 100 | 55 | 817.9 / 859.4 | 5.0 / 4.6 |

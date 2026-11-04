@@ -62,7 +62,7 @@ T_i = the per-instance ALNS-CP time of Table 10 (179.86–800.39 s). Held-out bu
 | `ptw_8x1_F_escada_fixa` | the ladder is never adapted | i7, Ryzen |
 | `ptw_8x1_C_cache_inicial` | the exchange energy cache starts at E(s*) instead of 0 | i7, Ryzen, Xeon |
 | `ptw_8x1_PD_alpha0` | α = 0 (energy = makespan) | i7, Ryzen |
-| `ptw_8x1_FPD_escada_fixa_alpha0` | F and PD combined: the ladder is never adapted and α = 0; run after the pre-registered campaign on the four open instances (`lcbrtu_0`, `_3`, `_5`, `_8`), seeds 1–10 | Ryzen |
+| `ptw_8x1_FPD_escada_fixa_alpha0` | F and PD combined: the ladder is never adapted and α = 0; exploratory, run after the pre-registered campaign on the five open instances (`lcbrtu_0`, `_3`, `_5`, `_7`, `_8`), seeds 1–10 | Ryzen |
 | `ptw_8x1_D_instrumentado` | PT-W with per-move and per-exchange records (seeds 1–3) | i7, Ryzen, Xeon |
 
 ### Independent instances, scale and sensitivity
@@ -99,7 +99,7 @@ masks 0xFFFF and 0xFFFF0000), including the TW-LNS 4×2 and PT-W 8×1 references
 runs); the heuristics record the construction time, the improvement trajectory (time, makespan and, for PT-W, the
 slot and replica that found it) and the parameter set instead. PT-W files also carry `diagnostico_pt`: exchange
 acceptance per pair, final ladder, ladder adjustments and per-replica counters (proposals, acceptances, accepted
-deteriorations, subproblems without solution, round trips); the instrumented folders add `ctrl` with one record
+deteriorations, subproblems without solution, end-to-end transitions between the extreme slots, stored as `trips`); the instrumented folders add `ctrl` with one record
 per move and per exchange attempt. Held-out and ×10 files carry `conjunto` with the instance folder. Field names vary
 slightly between scripts (`seconds`/`wall_seconds`, `hint`, `solver`); the schedule and makespan fields are the same
 everywhere, which is what the checker reads. Exact runs keep the solver log next to the JSON (`*.log` or `logs/`).

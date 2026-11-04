@@ -11,6 +11,18 @@ SCALED = ["lcbrtu_3_x10", "lcbrtu_5_x10", "lcbrtu_8_x10"]
 PLAT = {"i7": "Intel Core i7-2600 (4 cores / 8 threads)", "ryzen": "AMD Ryzen 7 5700U (8 cores / 16 threads)",
         "xeon": "Intel Xeon E5-2696 v4 (22 cores / 44 threads)"}
 N_PERM, N_BOOT, SEED = 20000, 10000, 11
+OPEN = ["lcbrtu_0", "lcbrtu_3", "lcbrtu_5", "lcbrtu_7", "lcbrtu_8"]
+UP = ROOT / "instances" / "upstream" / "RCFJSSP-main" / "Experiment 4"
+STRICT = False
+
+
+def strict_value(j):
+    tr = j.get("trajetoria")
+    T = j.get("orcamento")
+    if not tr or T is None:
+        return j["makespan"]
+    vals = [h[1] for h in tr if h[0] <= T + 1e-9]
+    return min(vals) if vals else None
 
 
 def load(d, field="makespan"):
@@ -19,7 +31,10 @@ def load(d, field="makespan"):
         j = json.load(open(f, encoding="utf-8"))
         if not isinstance(j, dict) or j.get(field) is None:
             continue
-        out.setdefault(j["instance"], {})[j.get("seed", 1)] = j[field]
+        v = strict_value(j) if STRICT and field == "makespan" else j[field]
+        if v is None:
+            continue
+        out.setdefault(j["instance"], {})[j.get("seed", 1)] = v
     return out
 
 
@@ -234,13 +249,14 @@ def mechanisms():
         for code, folder, what in arms:
             compare(f"{PLAT[plat].split(' (')[0]}: PT-W 8×1 vs {code} ({what})", f"{plat}/{folder}", f"{plat}/ptw_8x1",
                     onesided=False)
-    print("\n#### Combined control F+PD (fixed ladder and α = 0 together), Ryzen, four open instances, ten seeds\n")
-    print("Run after the pre-registered campaign, with the same statistics, on the instances that are not solved to a "
-          "proved optimum (`lcbrtu_0`, `_3`, `_5`, `_8`): exchanges, geometric ladder, Metropolis acceptance and "
-          "slot-dependent kernels unchanged; the ladder is never adapted and the energy is the makespan.\n")
-    compare("AMD Ryzen 7 5700U: PT-W 8×1 vs F+PD (fixed ladder, α = 0), four open instances",
-            "ryzen/ptw_8x1_FPD_escada_fixa_alpha0", "ryzen/ptw_8x1", ["lcbrtu_0", "lcbrtu_3", "lcbrtu_5", "lcbrtu_8"],
-            onesided=False)
+    print("\n#### Exploratory combined control F+PD (fixed ladder and α = 0 together), Ryzen, five open instances, ten seeds\n")
+    print("Not part of the pre-registered protocol: run afterwards, with the same statistics, on the five benchmark "
+          "instances whose best audited value is above the published lower bound (`lcbrtu_0`, `_3`, `_5`, `_7`, `_8`; "
+          "the other five are solved to a proved optimum by every configuration). Exchanges, geometric ladder, "
+          "Metropolis acceptance and slot-dependent kernels unchanged; the ladder is never adapted and the energy is "
+          "the makespan.\n")
+    compare("AMD Ryzen 7 5700U: PT-W 8×1 vs F+PD (fixed ladder, α = 0), five open instances",
+            "ryzen/ptw_8x1_FPD_escada_fixa_alpha0", "ryzen/ptw_8x1", OPEN, onesided=False)
 
 
 def heldout():
@@ -331,8 +347,10 @@ def calibration():
 def diagnostics():
     print("\n## 8. Search diagnostics from the PT-W 8×1 result files (ten seeds)\n")
     print("Per slot, summed over the ten instances, ten seeds and the replicas that occupied the slot: proposals "
-          "returned by the solver, accepted proposals, accepted deteriorations, subproblems without a solution, and "
-          "global improvements (new best makespan) first found in the slot.\n")
+          "returned by the solver, accepted proposals, accepted deteriorations and subproblems without a solution are "
+          "indexed by the slot the replica occupied when the repair was configured (entry slot); global improvements "
+          "(new best makespan) are indexed by the slot the replica occupied when the improvement was published, which "
+          "can differ from the entry slot because exchanges are asynchronous.\n")
     for plat in ("i7", "ryzen", "xeon"):
         d = f"{plat}/ptw_8x1"
         if not exists(d):
@@ -357,8 +375,9 @@ def diagnostics():
         for s in sorted(agg):
             v = agg[s]
             print(f"| {s} | {v[0]} | {v[1]} | {v[2]} | {v[3]} | {v[4]} |")
-        print(f"\nExchange acceptance rate per pair, mean over runs: {st.mean(ex_rate):.3f}; round trips "
-              f"(replica visiting both ends of the ladder), mean per replica: {st.mean(trips):.2f}.")
+        print(f"\nExchange acceptance rate per pair, mean over runs: {st.mean(ex_rate):.3f}. End-to-end transitions "
+              f"(a replica passing from one extreme slot to the other), mean per replica: {st.mean(trips):.2f}; "
+              f"complete round trips (⌊transitions / 2⌋), mean per replica: {st.mean(t // 2 for t in trips):.2f}.")
 
 
 def instrumented():
@@ -518,6 +537,114 @@ def screen():
               f"(limit {m['limit_gb']} GB, `ok32` = {m['ok32']}).")
 
 
+def cutoff():
+    print("\n## 14. Strict time cutoff: values restricted to improvements logged within the nominal budget\n")
+    print("Every record with a trajectory is re-read keeping only the improvements whose logged time (rounded to 0.1 s) "
+          "is at or below the nominal budget; a run whose last improvement was logged after the budget keeps its best "
+          "value before it. Folders without trajectories (whole-model solver runs) are unchanged.\n")
+    print("| folder | records with trajectory | records changed | largest excess of the last improvement (s) | largest wall-clock excess (s) |")
+    print("|---|---:|---:|---:|---:|")
+    tot = chg = 0
+    for d in sorted(glob.glob(str(R / "*" / "*"))):
+        rows = [json.load(open(f, encoding="utf-8")) for f in glob.glob(str(Path(d) / "*.json"))]
+        rows = [j for j in rows if isinstance(j, dict) and j.get("trajetoria") and j.get("orcamento")]
+        if not rows:
+            continue
+        n = sum(strict_value(j) != j["makespan"] for j in rows)
+        tot += len(rows); chg += n
+        if n:
+            exc = max(max(h[0] for h in j["trajetoria"]) - j["orcamento"] for j in rows)
+            wall = max((j.get("wall_seconds") or 0) - j["orcamento"] for j in rows)
+            print(f"| `{Path(d).relative_to(R)}` | {len(rows)} | {n} | {exc:.1f} | {wall:.1f} |")
+    print(f"\nRecords with a trajectory: {tot}; records whose value changes under the strict cutoff: {chg}.\n")
+    global STRICT
+    STRICT = True
+    print("The matched, same-geometry and independent-instance comparisons under the strict cutoff:\n")
+    compare("i7: PT-W 8×1 vs TW-LNS 4×2 (eight threads), strict cutoff", "final/heur_lns_janela", "i7/ptw_8x1")
+    compare("Ryzen: PT-W 8×1 vs TW-LNS 4×2 (eight threads), strict cutoff", "ryzen/heur_lns_janela_4x2", "ryzen/ptw_8x1")
+    compare("Ryzen: PT-W 16×1 vs TW-LNS 8×2 (sixteen threads), strict cutoff", "ryzen/heur_lns_janela_8x2", "ryzen/ptw_16x1")
+    compare("Xeon: PT-W 8×1 vs TW-LNS 4×2 (eight threads), strict cutoff", "xeon/heur_lns_janela_4x2", "xeon/ptw_8x1")
+    compare("Xeon: PT-W 16×1 vs TW-LNS 8×2 (sixteen threads), strict cutoff", "xeon/heur_lns_janela_8x2", "xeon/ptw_16x1")
+    compare("Xeon: PT-W 16×2 vs TW-LNS 16×2 (thirty-two threads), strict cutoff", "xeon/heur_lns_janela_16x2", "xeon/ptw_16x2")
+    for plat in ("i7", "ryzen", "xeon"):
+        compare(f"{PLAT[plat].split(' (')[0]}: PT-W 8×1 vs TW-LNS 8×1, strict cutoff", f"{plat}/lns_8x1", f"{plat}/ptw_8x1")
+    for plat in ("i7", "ryzen", "xeon"):
+        compare(f"{PLAT[plat].split(' (')[0]}, fifteen independent instances: PT-W 8×1 vs TW-LNS 4×2, strict cutoff",
+                f"{plat}/heldout_lns_4x2", f"{plat}/heldout_ptw_8x1", HELD)
+    STRICT = False
+
+
+def resource_pressure():
+    import sys
+    sys.path.insert(0, str(ROOT))
+    from rcfjssp_core import parse
+    print("\n## 15. Resource pressure: conservative bounds on simultaneous tool and utility use\n")
+    print("For a utility, the bound is the sum over machines of the largest consumption rate of that utility among the "
+          "operations and modes eligible on the machine; a machine processes one operation at a time, so the "
+          "simultaneous use cannot exceed it. For a tool, the bound is the smaller of the number of jobs with an "
+          "operation that uses the tool and the number of machines eligible for those operations; a job has one "
+          "operation in process at a time. A constraint whose bound does not exceed its capacity cannot bind in any "
+          "schedule (redundant). The test says nothing about a constraint whose bound exceeds the capacity, and it does "
+          "not cover buffers, material stocks or WIP limits, which remain active in every model.\n")
+    print("| instance | operations | utilities: redundant / total | largest utility bound / capacity | tools: redundant / total | largest tool bound / capacity |")
+    print("|---|---:|---:|---:|---:|---:|")
+    files = [(i, UP / f"{i}.fjs") for i in INST] + [(i, ROOT / "instances" / "heldout" / f"{i}.fjs") for i in HELD]
+    tot = collections.Counter()
+    for stem, path in files:
+        if not path.exists():
+            continue
+        inst = parse(path)
+        ur, uc, umax = 0, 0, (0, 1)
+        for uid, cap in inst.utilities.items():
+            per_m = collections.defaultdict(int)
+            for o in inst.operations:
+                for (m, _d), rates in zip(o.modes, o.rates):
+                    r = dict(rates).get(uid, 0)
+                    per_m[m] = max(per_m[m], r)
+            b = sum(per_m.values())
+            uc += 1; ur += b <= cap
+            if b / cap > umax[0] / umax[1]:
+                umax = (b, cap)
+        tr, tc, tmax = 0, 0, (0, 1)
+        for tid, cap in inst.tools.items():
+            users = inst.users_of_tool(tid)
+            if not users:
+                continue
+            b = min(len({o.job for o in users}), len({m for o in users for m, _d in o.modes}))
+            tc += 1; tr += b <= cap
+            if b / cap > tmax[0] / tmax[1]:
+                tmax = (b, cap)
+        tot["ur"] += ur; tot["uc"] += uc; tot["tr"] += tr; tot["tc"] += tc; tot["all"] += (tr == tc and ur == uc)
+        print(f"| {stem} | {inst.n_operations} | {ur} / {uc} | {umax[0]} / {umax[1]} | {tr} / {tc} | {tmax[0]} / {tmax[1]} |")
+    print(f"\nRedundant by these bounds: {tot['ur']} of {tot['uc']} utility constraints and {tot['tr']} of {tot['tc']} "
+          f"tool constraints; instances in which every tool and utility constraint is redundant: {tot['all']} of {len(files)}.")
+
+
+def initialization():
+    print("\n## 16. Initial schedules of the matched runs (same instance and seed)\n")
+    print("The first trajectory entry of each run is the constructed schedule. Both methods construct with the same "
+          "procedure, but the parallel first-feasible search makes the realized schedule depend on timing, so the "
+          "initial objectives of a PT-W run and of the TW-LNS run with the same seed need not coincide.\n")
+    print("| platform | pairs | identical initial objective | mean initial objective TW-LNS / PT-W | mean construction time (s) TW-LNS / PT-W |")
+    print("|---|---:|---:|---:|---:|")
+    for plat, ctl in (("i7", "final/heur_lns_janela"), ("ryzen", "ryzen/heur_lns_janela_4x2"), ("xeon", "xeon/heur_lns_janela_4x2")):
+        arm = f"{plat}/ptw_8x1"
+        if not (exists(ctl) and exists(arm)):
+            continue
+        first = {}
+        for d in (ctl, arm):
+            for f in glob.glob(str(R / d / "*.json")):
+                j = json.load(open(f, encoding="utf-8"))
+                tr = j.get("trajetoria")
+                if tr:
+                    first[(d, j["instance"], j["seed"])] = (tr[0][1], tr[0][0])
+        keys = [(i, k) for (d, i, k) in first if d == ctl and (arm, i, k) in first]
+        same = sum(first[(ctl, i, k)][0] == first[(arm, i, k)][0] for i, k in keys)
+        mc = st.mean(first[(ctl, i, k)][0] for i, k in keys); ma = st.mean(first[(arm, i, k)][0] for i, k in keys)
+        tc = st.mean(first[(ctl, i, k)][1] for i, k in keys); ta = st.mean(first[(arm, i, k)][1] for i, k in keys)
+        print(f"| {plat} | {len(keys)} | {same} | {mc:.1f} / {ma:.1f} | {tc:.1f} / {ta:.1f} |")
+
+
 def main():
     b = alns_cp()
     print("# Campaign tables (generated by `experimentos/analise_campanhas.py` from the files in `results/`)\n")
@@ -540,6 +667,9 @@ def main():
     bounds()
     contextual(b)
     screen()
+    cutoff()
+    resource_pressure()
+    initialization()
 
 
 if __name__ == "__main__":

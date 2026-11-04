@@ -57,7 +57,7 @@ Method names versus names in the code and in the result folders:
 | TW-LNS | `rcfjssp_lns.py --viz janela`; folders `heur_lns_janela` (i7), `heur_lns_janela_4x2`, `_8x2`, `_16x2`; code name `X8b` |
 | TW-LNS 8×1 (same geometry as PT-W 8×1) | `rcfjssp_lns.py --viz janela --walkers 8 --fios 1`; folder `lns_8x1` |
 | PT-W | `rcfjssp_ptw.py`; folders `ptw_8x1`, `ptw_4x2`, `ptw_16x1`, `ptw_16x2`; code name `PTW` / `X12` |
-| PT-W controls PE, U, F, C, PD, D | `rcfjssp_ptw.py --sem-troca` / `--alpha-e 0` and `rcfjssp_ptw_controls.py --braco U/F/C/D`; folders `ptw_8x1_PE_semtroca`, `ptw_8x1_U_nucleo_uniforme`, `ptw_8x1_F_escada_fixa`, `ptw_8x1_C_cache_inicial`, `ptw_8x1_PD_alpha0`, `ptw_8x1_D_instrumentado`; combined control F+PD (`--braco F --alpha-e 0`): `ptw_8x1_FPD_escada_fixa_alpha0` (Ryzen, four open instances) |
+| PT-W controls PE, U, F, C, PD, D | `rcfjssp_ptw.py --sem-troca` / `--alpha-e 0` and `rcfjssp_ptw_controls.py --braco U/F/C/D`; folders `ptw_8x1_PE_semtroca`, `ptw_8x1_U_nucleo_uniforme`, `ptw_8x1_F_escada_fixa`, `ptw_8x1_C_cache_inicial`, `ptw_8x1_PD_alpha0`, `ptw_8x1_D_instrumentado`; combined control F+PD (`--braco F --alpha-e 0`): `ptw_8x1_FPD_escada_fixa_alpha0` (Ryzen, five open instances) |
 | independent instances, ×10 instances, sensitivity | `rcfjssp_heldout.py`, `rcfjssp_ptw_controls.py --braco S`; folders `heldout_*`, `escala10_*`, `sens_*` |
 | replica-layout screen | `screen_ptw_8x1`, `screen_ptw_4x2` (i7, Ryzen); `screen_ptw_16x2`, `screen_ptw_32x1` (Xeon) |
 | calibration grid (θ, ρ₀) | `calibra_lns.py`; folder `final/calibracao` (development runner) and `i7/calibracao_janela` (window-only rerun); code name `X9` |
